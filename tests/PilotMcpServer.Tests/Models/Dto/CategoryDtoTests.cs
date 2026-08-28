@@ -1,7 +1,7 @@
 using System.Text.Json;
-using PilotMcpServer.Models;
+using PilotMcpServer.Models.Dto;
 
-namespace PilotMcpServer.Tests.Models;
+namespace PilotMcpServer.Tests.Models.Dto;
 
 [TestFixture]
 public class CategoryDtoTests

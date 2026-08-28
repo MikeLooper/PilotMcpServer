@@ -1,6 +1,7 @@
 using System.Net;
 using PilotMcpServer.Configuration;
 using PilotMcpServer.Models;
+using PilotMcpServer.Models.Dto;
 using PilotMcpServer.Services;
 using PilotMcpServer.Tests.Testing.Doubles;
 

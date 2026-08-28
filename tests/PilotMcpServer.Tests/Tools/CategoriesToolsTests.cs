@@ -1,5 +1,6 @@
 using Moq;
 using PilotMcpServer.Models;
+using PilotMcpServer.Models.Dto;
 using PilotMcpServer.Services;
 using PilotMcpServer.Tools;
 
@@ -14,7 +15,7 @@ public class CategoriesToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new CategoriesTools(client.Object);
         var expected = new List<CategoryDto> { new() { CategoryId = 1, CategoryName = "Beverages" } };
-        client.Setup(c => c.GetJsonListAsync<CategoryDto>("/categories/get-all", "custom-api", It.IsAny<CancellationToken>()))
+        client.Setup(c => c.GetJsonListAsync<CategoryDto>("/v1/categories/get-all", "custom-api", It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.GetAllCategoriesAsync("custom-api", CancellationToken.None);
@@ -29,7 +30,7 @@ public class CategoriesToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new CategoriesTools(client.Object);
         var expected = new CategoryDto { CategoryId = 5, CategoryName = "Produce" };
-        client.Setup(c => c.GetJsonAsync<CategoryDto>("/categories/get/5", null, It.IsAny<CancellationToken>()))
+        client.Setup(c => c.GetJsonAsync<CategoryDto>("/v1/categories/get/5", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.GetCategoryAsync(5, null, CancellationToken.None);
@@ -43,7 +44,7 @@ public class CategoriesToolsTests
     {
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new CategoriesTools(client.Object);
-        client.Setup(c => c.GetJsonAsync<CategoryDto>("/categories/get/999", null, It.IsAny<CancellationToken>()))
+        client.Setup(c => c.GetJsonAsync<CategoryDto>("/v1/categories/get/999", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync((CategoryDto?)null);
 
         var result = await tools.GetCategoryAsync(999, null, CancellationToken.None);
@@ -58,7 +59,7 @@ public class CategoriesToolsTests
         var tools = new CategoriesTools(client.Object);
         var category = new CategoryDto { CategoryId = 0, CategoryName = "Snacks" };
         var expected = new AddResponse { Id = 10 };
-        client.Setup(c => c.PostJsonAsync<CategoryDto, AddResponse>("/categories/add", category, null, It.IsAny<CancellationToken>()))
+        client.Setup(c => c.PostJsonAsync<CategoryDto, AddResponse>("/v1/categories/add", category, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.AddCategoryAsync(category, null, CancellationToken.None);
@@ -73,7 +74,7 @@ public class CategoriesToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new CategoriesTools(client.Object);
         var category = new CategoryDto { CategoryId = 3, CategoryName = "Updated" };
-        client.Setup(c => c.PutJsonAsync("/categories/update", category, null, It.IsAny<CancellationToken>()))
+        client.Setup(c => c.PutJsonAsync("/v1/categories/update", category, null, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         await tools.UpdateCategoryAsync(category, null, CancellationToken.None);
@@ -86,7 +87,7 @@ public class CategoriesToolsTests
     {
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new CategoriesTools(client.Object);
-        client.Setup(c => c.DeleteAsync("/categories/delete/8", null, It.IsAny<CancellationToken>()))
+        client.Setup(c => c.DeleteAsync("/v1/categories/delete/8", null, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         await tools.DeleteCategoryAsync(8, null, CancellationToken.None);

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using PilotMcpServer.Models;
 
-namespace PilotMcpServer.Tests.Models;
+namespace PilotMcpServer.Tests.Models.Response;
 
 [TestFixture]
 public class AddResponseTests

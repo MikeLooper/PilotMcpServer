@@ -15,15 +15,18 @@ builder.Services.AddHttpClient<IPilotHttpClient, PilotHttpClient>();
 builder.Services.AddSingleton<IPilotApiSelection, PilotApiSelectionState>();
 
 builder.Services
-    .AddMcpServer(options =>
-    {
-        options.ServerInfo = new()
-        {
-            Name = "Pilot MCP Server",
-            Version = "1.0.0",
-        };
-    })
-    .WithStdioServerTransport()
-    .WithToolsFromAssembly();
+	.AddMcpServer(options =>
+	{
+		options.ServerInfo = new()
+		{
+			Description = "A custom MCP Server that will read data from any of 6 flavors of Pilot APIs (reading Northwind data from 2 databases)",
+			Name = "Pilot MCP Server",
+			Title = "Pilot MCP Server",
+			Version = "1.0.0",
+			WebsiteUrl = "https://github.com/MikeLooper"
+		};
+	})
+	.WithStdioServerTransport()
+	.WithToolsFromAssembly();
 
 await builder.Build().RunAsync();
