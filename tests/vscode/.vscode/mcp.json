@@ -1,0 +1,14 @@
+{
+    "servers": {
+        "pilot-mcp-server": {
+            "type": "stdio",
+            "command": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "../../src/PilotMcpServer/PilotMcpServer.csproj"
+            ]
+        }
+    },
+    "inputs": []
+}

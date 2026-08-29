@@ -1,3 +1,4 @@
+using PilotMcpServer.Contracts.Services;
 using PilotMcpServer.Models;
 
 namespace PilotMcpServer.Services;
@@ -20,6 +21,8 @@ public interface IPilotHttpClient
     Task DeleteAsync(string path, string? apiName, CancellationToken cancellationToken);
 
     Task<AboutResponse> GetAboutAsync(PilotApiEndpoint endpoint, CancellationToken cancellationToken);
+
+    Task<bool> GetHealthCheckAsync(string? apiName, CancellationToken cancellationToken);
 
     /// <summary>Resolves an optional per-call API name override to a concrete endpoint, defaulting to the current selection.</summary>
     PilotApiEndpoint ResolveEndpoint(string? apiName);

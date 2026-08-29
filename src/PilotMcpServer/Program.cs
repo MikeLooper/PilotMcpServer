@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using PilotMcpServer.Contracts.Services;
 using PilotMcpServer.Services;
 
 var builder = Host.CreateApplicationBuilder(args);

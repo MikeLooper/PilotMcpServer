@@ -20,7 +20,8 @@ PilotMcpServer/
 │       ├── Services/            # HTTP client + API-selection state
 │       └── Tools/               # MCP tool classes, one per resource
 └── tests/
-    └── PilotMcpServer.Tests/    # NUnit + Moq unit tests, mirrors src/ layout
+    ├── PilotMcpServer.Tests/    # NUnit + Moq unit tests, mirrors src/ layout
+    └── vscode                   # VS Code manual validation and testing
 ```
 
 ## Shared source submodule
@@ -135,3 +136,7 @@ Every data tool accepts an optional `apiName` argument (matching the **Descripti
 - Suppliers
 
 Every tool is `async`, takes a `CancellationToken`, and carries a `[Description]` written for the calling LLM. Request/response DTOs mirror the OpenAPI schemas field-for-field (including which fields are required vs. optional), so payload shape is validated the same way the underlying API validates it.
+
+## Validation and Integration Testing
+
+To validate that the MCP server is working correctly with the APIs, open VS Code in the \tests\vscode directory and follow the directions in the README found in that directory.

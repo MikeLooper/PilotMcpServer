@@ -1,6 +1,6 @@
 using PilotMcpServer.Models;
 
-namespace PilotMcpServer.Services;
+namespace PilotMcpServer.Contracts.Services;
 
 /// <summary>Tracks which configured Pilot API is used by default when a tool call doesn't override it.</summary>
 public interface IPilotApiSelection

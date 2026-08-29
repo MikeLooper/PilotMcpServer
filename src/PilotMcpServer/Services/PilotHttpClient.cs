@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using PilotMcpServer.Configuration;
+using PilotMcpServer.Contracts.Services;
 using PilotMcpServer.Models;
 
 namespace PilotMcpServer.Services;
@@ -85,6 +86,13 @@ public sealed class PilotHttpClient(HttpClient httpClient, IPilotApiSelection se
         await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
         var result = await response.Content.ReadFromJsonAsync<AboutResponse>(SerializerOptions, cancellationToken).ConfigureAwait(false);
         return result ?? throw new PilotApiException(response.StatusCode, null);
+    }
+
+    public async Task<bool> GetHealthCheckAsync(string? apiName, CancellationToken cancellationToken)
+    {
+        var endpoint = ResolveEndpoint(apiName);
+        using var response = await httpClient.GetAsync(BuildUri(endpoint, "/healthcheck"), cancellationToken).ConfigureAwait(false);
+        return response.IsSuccessStatusCode;
     }
 
     private static Uri BuildUri(PilotApiEndpoint endpoint, string path) => new($"{endpoint.BaseUrl}{path}");
