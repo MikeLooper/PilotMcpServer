@@ -1,5 +1,6 @@
 using System.Threading;
 using PilotMcpServer.Configuration;
+using PilotMcpServer.Contracts.Services;
 using PilotMcpServer.Models;
 
 namespace PilotMcpServer.Services;

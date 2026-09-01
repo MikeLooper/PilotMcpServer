@@ -20,7 +20,8 @@ PilotMcpServer/
 │       ├── Services/            # HTTP client + API-selection state
 │       └── Tools/               # MCP tool classes, one per resource
 └── tests/
-    └── PilotMcpServer.Tests/    # NUnit + Moq unit tests, mirrors src/ layout
+    ├── PilotMcpServer.Tests/    # NUnit + Moq unit tests, mirrors src/ layout
+    └── vscode                   # VS Code manual validation and testing
 ```
 
 ## Shared source submodule
@@ -80,14 +81,36 @@ All server logging goes to **stderr** — never stdout — so it never corrupts 
 
 The Pilot API is deployed in six equivalent flavors, all implementing the same contract (`shared/PilotSharedSource/OpenAPI/PilotApi_v1.yaml`). This server ships with the deployment list compiled directly into the assembly (`src/PilotMcpServer/Configuration/PilotApiCatalog.cs`) rather than reading it from an external config file at runtime, so it can't be silently altered post-deployment — a developer edits that file and rebuilds to change the list.
 
-| Description                      | Host      | Port  |
-| --------------------------------- | --------- | ----- |
-| .NET Core with SQL Server (default) | localhost | 55101 |
-| .NET Core with PostgreSQL         | localhost | 55201 |
-| Java Spring Boot with SQL Server  | localhost | 55301 |
-| Java Spring Boot with PostgreSQL  | localhost | 55401 |
-| Python with SQL Server            | localhost | 55701 |
-| Python with PostgreSQL            | localhost | 55801 |
+| Description                        | Host      | Container Name               | Port  |
+| ---------------------------------- | --------- | ---------------------------- | ----- |
+| .NET Core with SQL Server (default) | localhost | pilot-api-dotnet-mssql       | 55101 |
+| .NET Core with PostgreSQL          | localhost | pilot-api-dotnet-postgres    | 55201 |
+| Java Spring Boot with SQL Server   | localhost | pilot-api-java-mssql         | 55301 |
+| Java Spring Boot with PostgreSQL   | localhost | pilot-api-java-postgres      | 55401 |
+| Python with SQL Server             | localhost | pilot-api-python-mssql       | 55701 |
+| Python with PostgreSQL             | localhost | pilot-api-python-postgres    | 55801 |
+
+### Docker hostname selection (`RUNNING_IN_DOCKER`)
+
+When `PilotApiCatalog` builds `PilotApiEndpoint` entries, it selects the hostname source based on the `RUNNING_IN_DOCKER` environment variable:
+
+- If `RUNNING_IN_DOCKER` is present and set to `true` (case-insensitive), the endpoint uses each API's `ContainerName`.
+- Otherwise, the endpoint uses each API's `Host`.
+
+This allows the same build to run correctly:
+- outside Docker (use `localhost` hostnames), and
+- inside Docker/container networks (use service/container DNS names).
+
+Examples:
+
+```powershell
+$env:RUNNING_IN_DOCKER = "true"
+dotnet run --project src/PilotMcpServer
+```
+
+```bash
+RUNNING_IN_DOCKER=true dotnet run --project src/PilotMcpServer
+```
 
 Every data tool accepts an optional `apiName` argument (matching the **Description** column above, e.g. `"Python with PostgreSQL"`) to call a specific deployment for that one call. Call `select_api` to change the default used when `apiName` is omitted.
 
@@ -113,3 +136,7 @@ Every data tool accepts an optional `apiName` argument (matching the **Descripti
 - Suppliers
 
 Every tool is `async`, takes a `CancellationToken`, and carries a `[Description]` written for the calling LLM. Request/response DTOs mirror the OpenAPI schemas field-for-field (including which fields are required vs. optional), so payload shape is validated the same way the underlying API validates it.
+
+## Validation and Integration Testing
+
+To validate that the MCP server is working correctly with the APIs, open VS Code in the \tests\vscode directory and follow the directions in the README found in that directory.

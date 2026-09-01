@@ -1,15 +1,24 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <AssemblyName>PilotMcpServer</AssemblyName>
-    <RootNamespace>PilotMcpServer</RootNamespace>
-    <InvariantGlobalization>true</InvariantGlobalization>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<AssemblyName>PilotMcpServer</AssemblyName>
+		<RootNamespace>PilotMcpServer</RootNamespace>
+		<InvariantGlobalization>true</InvariantGlobalization>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="appsettings.json" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<PublishSingleFile>true</PublishSingleFile>
+		<UseAppHost>true</UseAppHost>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="ModelContextProtocol.AspNetCore" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" />
+	</ItemGroup>
 
 </Project>

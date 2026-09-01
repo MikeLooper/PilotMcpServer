@@ -1,5 +1,6 @@
 using Moq;
 using PilotMcpServer.Models;
+using PilotMcpServer.Models.Dto;
 using PilotMcpServer.Services;
 using PilotMcpServer.Tools;
 
@@ -14,7 +15,7 @@ public class OrdersToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new OrdersTools(client.Object);
         var expected = new List<OrderDto> { new() { OrderId = 1 } };
-        client.Setup(c => c.GetJsonListAsync<OrderDto>("/orders/get-all", null, It.IsAny<CancellationToken>()))
+        client.Setup(c => c.GetJsonListAsync<OrderDto>("/v1/orders/get-all", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.GetAllOrdersAsync(null, CancellationToken.None);
@@ -29,7 +30,7 @@ public class OrdersToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new OrdersTools(client.Object);
         var expected = new OrderDto { OrderId = 10248 };
-        client.Setup(c => c.GetJsonAsync<OrderDto>("/orders/get/10248", null, It.IsAny<CancellationToken>()))
+        client.Setup(c => c.GetJsonAsync<OrderDto>("/v1/orders/get/10248", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.GetOrderAsync(10248, null, CancellationToken.None);
@@ -45,7 +46,7 @@ public class OrdersToolsTests
         var tools = new OrdersTools(client.Object);
         var order = new OrderDto { OrderId = 0 };
         var expected = new AddResponse { Id = 11077 };
-        client.Setup(c => c.PostJsonAsync<OrderDto, AddResponse>("/orders/add", order, null, It.IsAny<CancellationToken>()))
+        client.Setup(c => c.PostJsonAsync<OrderDto, AddResponse>("/v1/orders/add", order, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.AddOrderAsync(order, null, CancellationToken.None);
@@ -60,7 +61,7 @@ public class OrdersToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new OrdersTools(client.Object);
         var order = new OrderDto { OrderId = 10248, ShipCity = "Berlin" };
-        client.Setup(c => c.PutJsonAsync("/orders/update", order, null, It.IsAny<CancellationToken>()))
+        client.Setup(c => c.PutJsonAsync("/v1/orders/update", order, null, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         await tools.UpdateOrderAsync(order, null, CancellationToken.None);
@@ -73,7 +74,7 @@ public class OrdersToolsTests
     {
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new OrdersTools(client.Object);
-        client.Setup(c => c.DeleteAsync("/orders/delete/10248", null, It.IsAny<CancellationToken>()))
+        client.Setup(c => c.DeleteAsync("/v1/orders/delete/10248", null, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         await tools.DeleteOrderAsync(10248, null, CancellationToken.None);

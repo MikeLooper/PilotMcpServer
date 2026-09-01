@@ -2,6 +2,7 @@ using System.ComponentModel;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using PilotMcpServer.Configuration;
+using PilotMcpServer.Contracts.Services;
 using PilotMcpServer.Models;
 using PilotMcpServer.Services;
 
@@ -43,6 +44,23 @@ public sealed class SystemTools(IPilotHttpClient client, IPilotApiSelection sele
     [Description("Lists a summary of the logical endpoints exposed by the Pilot API contract (grouped by resource, not repeated per deployment, since every configured API implements the identical contract).")]
     public Task<IReadOnlyList<EndpointSummary>> ListEndpointsAsync(CancellationToken cancellationToken)
         => Task.FromResult(PilotEndpointCatalog.All);
+
+    [McpServerTool(Name = "get_healthcheck")]
+    [Description("Calls the /healthcheck endpoint on a Pilot API and returns whether it is healthy (true) or not (false).")]
+    public Task<bool> GetHealthCheckAsync(
+        [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
+        CancellationToken cancellationToken = default)
+        => client.GetHealthCheckAsync(apiName, cancellationToken);
+
+    [McpServerTool(Name = "get_about")]
+    [Description("Calls the /about endpoint on a Pilot API and returns application metadata: name, API version, build version, and deploy date.")]
+    public Task<AboutResponse> GetAboutAsync(
+        [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
+        CancellationToken cancellationToken = default)
+    {
+        var endpoint = client.ResolveEndpoint(apiName);
+        return client.GetAboutAsync(endpoint, cancellationToken);
+    }
 
     private async Task<PilotApiStatus> GetStatusAsync(PilotApiEndpoint endpoint, PilotApiEndpoint current, CancellationToken cancellationToken)
     {
