@@ -24,7 +24,7 @@ public class PilotApiSelectionStateTests
         state.SetCurrent("Python with PostgreSQL");
 
         Assert.That(state.Current.Name, Is.EqualTo("Python with PostgreSQL"));
-        Assert.That(state.Current.Port, Is.EqualTo(55801));
+        Assert.That(state.Current.Port, Is.EqualTo(55601));
     }
 
     [Test]

@@ -104,16 +104,27 @@ public sealed class PilotHttpClient(HttpClient httpClient, IPilotApiSelection se
             return;
         }
 
+        var rawBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
         ProblemDetailsResponse? problem = null;
-        try
+        if (!string.IsNullOrWhiteSpace(rawBody))
         {
-            problem = await response.Content.ReadFromJsonAsync<ProblemDetailsResponse>(SerializerOptions, cancellationToken).ConfigureAwait(false);
-        }
-        catch (JsonException)
-        {
-            // Response body wasn't a ProblemDetails payload; fall through with no parsed detail.
+            try
+            {
+                problem = JsonSerializer.Deserialize<ProblemDetailsResponse>(rawBody, SerializerOptions);
+            }
+            catch (JsonException)
+            {
+                // Response body wasn't a ProblemDetails payload; fall through and surface it as raw text instead.
+            }
         }
 
-        throw new PilotApiException(response.StatusCode, problem);
+        throw new PilotApiException(
+            response.StatusCode,
+            problem,
+            rawBody,
+            response.RequestMessage?.Method,
+            response.RequestMessage?.RequestUri,
+            response.Content.Headers.ContentType);
     }
 }

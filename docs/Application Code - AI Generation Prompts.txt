@@ -35,4 +35,11 @@ Create a C# MCP server that will allow interaction with the Pilot APIs.
 4. Create unit tests to match and cover the created classes, methods, and properties. Verify all unit tests execute successfully, or repair as needed to reach successful execution.
 5. Update the README to describe the current application and how it would be used.
 
-...
+
+When this application calls an API and experiences an error or failure, this application is currently returning a very generic error, which does not assist the consumer with troubleshooting, determining the failure point, or discovering what needs to be repaired.
+Update the API calling process, to assist consumers in troubleshooting, by returning the following information to the consumer:
+1. Any status code
+2. Any error description
+3. Any other API response details.
+
+

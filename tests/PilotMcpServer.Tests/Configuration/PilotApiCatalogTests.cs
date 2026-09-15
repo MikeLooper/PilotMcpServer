@@ -17,8 +17,8 @@ public class PilotApiCatalogTests
     [TestCase(".NET Core with PostgreSQL", "localhost", 55201)]
     [TestCase("Java Spring Boot with SQL Server", "localhost", 55301)]
     [TestCase("Java Spring Boot with PostgreSQL", "localhost", 55401)]
-    [TestCase("Python with SQL Server", "localhost", 55701)]
-    [TestCase("Python with PostgreSQL", "localhost", 55801)]
+    [TestCase("Python with SQL Server", "localhost", 55501)]
+    [TestCase("Python with PostgreSQL", "localhost", 55601)]
     public void PilotApiCatalog_All_ContainsExpectedEntry_Test(string name, string host, int port)
     {
         var all = PilotApiCatalog.All;

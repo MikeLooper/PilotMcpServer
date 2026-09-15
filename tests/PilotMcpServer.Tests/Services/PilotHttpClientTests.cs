@@ -38,7 +38,7 @@ public class PilotHttpClientTests
 
         await client.GetJsonListAsync<CategoryDto>("/categories/get-all", "Python with PostgreSQL", CancellationToken.None);
 
-        Assert.That(handler.LastRequest!.RequestUri!.ToString(), Is.EqualTo("http://localhost:55801/categories/get-all"));
+        Assert.That(handler.LastRequest!.RequestUri!.ToString(), Is.EqualTo("http://localhost:55601/categories/get-all"));
     }
 
     [Test]

@@ -67,13 +67,24 @@ Point your MCP client at the built executable and let it launch the server over 
   "mcpServers": {
     "pilot": {
       "command": "dotnet",
-      "args": ["run", "--project", "C:/path/to/PilotMcpServer/src/PilotMcpServer"]
+      "args": ["run", "--project", "C:/Working/Storage/Dev/GitHub/PilotMcpServer/src/PilotMcpServer"]
     }
   }
 }
 ```
 
 (Or point `command` at the published/built `PilotMcpServer.exe` directly for a faster startup than `dotnet run`.)
+```json
+{
+  "servers": {
+    "pilot": {
+      "type": "stdio",
+      "command": "C:/Working/Storage/Dev/GitHub/PilotMcpServer/src/PilotMcpServer/bin/Debug/net10.0/PilotMcpServer.exe",
+      "args": []
+    }
+  }
+}
+```
 
 All server logging goes to **stderr** — never stdout — so it never corrupts the JSON-RPC stream the client is reading from stdout.
 
