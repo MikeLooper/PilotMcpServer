@@ -2,6 +2,8 @@
 
 # Start
 
+Open VSCode with the current folder as the workspace home.
+
 Open the .vscode/mcp.json file.  It will appear similar to the following:
 
 ![mcp.json Start](./images/mcp_json_start.png)
