@@ -63,12 +63,12 @@ Deployed: 2026-08-27 15:57:07Z
 
 | API | Address | Available | Build | Selected |
 | --- | --- | --- | --- | --- |
-| .NET Core with SQL Server | localhost:55101 | Yes | 1.0. +7f9e2cec1060a74d8e2005d6cf563ba83ec77d6c | Yes |
-| .NET Core with PostgreSQL | localhost:55201 | Yes | 1.0.0+7f9e2cec1060a74d8e2005d6cf563ba83ec77d6c | No |
-| Java Spring Boot with SQL Server | localhost:55301 | Yes | 0.2.0 | No |
-| Java Spring Boot with PostgreSQL | localhost:55401 | Yes | 0.2.0 | No |
-| Python with SQL Server | localhost:55501 | Yes | 1.0.0 | No |
-| Python with PostgreSQL | localhost:55601 | Yes | 1.0.0 | No |
+| .NET Core with SQL Server | localhost:11001 | Yes | 1.0. +7f9e2cec1060a74d8e2005d6cf563ba83ec77d6c | Yes |
+| .NET Core with PostgreSQL | localhost:11101 | Yes | 1.0.0+7f9e2cec1060a74d8e2005d6cf563ba83ec77d6c | No |
+| Java Spring Boot with SQL Server | localhost:11201 | Yes | 0.2.0 | No |
+| Java Spring Boot with PostgreSQL | localhost:11301 | Yes | 0.2.0 | No |
+| Python with SQL Server | localhost:11401 | Yes | 1.0.0 | No |
+| Python with PostgreSQL | localhost:11501 | Yes | 1.0.0 | No |
 
 ### 4. List Endpoints
 - Specify the 'list_endpoints' tool.
@@ -93,7 +93,7 @@ Deployed: 2026-08-27 15:57:07Z
 - Expected result:
 
 ```
-Selected and verified: Java Spring Boot with PostgreSQL at localhost:55401 is now the active API deployment.
+Selected and verified: Java Spring Boot with PostgreSQL at localhost:11301 is now the active API deployment.
 ```
 
 Executing the 'list_apis' tool will now show the 'Java Spring Boot with PostgreSQL' API as selected.

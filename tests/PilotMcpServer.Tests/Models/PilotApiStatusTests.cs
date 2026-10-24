@@ -12,7 +12,7 @@ public class PilotApiStatusTests
         {
             Name = ".NET Core with SQL Server",
             Host = "localhost",
-            Port = 55101,
+            Port = 11001,
             IsSelected = true,
             IsDefault = true,
             IsAvailable = true,
@@ -23,7 +23,7 @@ public class PilotApiStatusTests
 
         Assert.That(status.Name, Is.EqualTo(".NET Core with SQL Server"));
         Assert.That(status.Host, Is.EqualTo("localhost"));
-        Assert.That(status.Port, Is.EqualTo(55101));
+        Assert.That(status.Port, Is.EqualTo(11001));
         Assert.That(status.IsSelected, Is.True);
         Assert.That(status.IsDefault, Is.True);
         Assert.That(status.IsAvailable, Is.True);
@@ -40,7 +40,7 @@ public class PilotApiStatusTests
         {
             Name = "Java Spring Boot with SQL Server",
             Host = "localhost",
-            Port = 55301,
+            Port = 11201,
             IsSelected = false,
             IsDefault = false,
             IsAvailable = false,

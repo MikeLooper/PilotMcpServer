@@ -13,12 +13,12 @@ public class PilotApiCatalogTests
         Assert.That(all, Has.Count.EqualTo(6));
     }
 
-    [TestCase(".NET Core with SQL Server", "localhost", 55101)]
-    [TestCase(".NET Core with PostgreSQL", "localhost", 55201)]
-    [TestCase("Java Spring Boot with SQL Server", "localhost", 55301)]
-    [TestCase("Java Spring Boot with PostgreSQL", "localhost", 55401)]
-    [TestCase("Python with SQL Server", "localhost", 55501)]
-    [TestCase("Python with PostgreSQL", "localhost", 55601)]
+    [TestCase(".NET Core with SQL Server", "localhost", 11001)]
+    [TestCase(".NET Core with PostgreSQL", "localhost", 11101)]
+    [TestCase("Java Spring Boot with SQL Server", "localhost", 11201)]
+    [TestCase("Java Spring Boot with PostgreSQL", "localhost", 11301)]
+    [TestCase("Python with SQL Server", "localhost", 11401)]
+    [TestCase("Python with PostgreSQL", "localhost", 11501)]
     public void PilotApiCatalog_All_ContainsExpectedEntry_Test(string name, string host, int port)
     {
         var all = PilotApiCatalog.All;
@@ -36,7 +36,7 @@ public class PilotApiCatalogTests
         var defaultEntry = PilotApiCatalog.Default;
 
         Assert.That(defaultEntry.Name, Is.EqualTo(".NET Core with SQL Server"));
-        Assert.That(defaultEntry.Port, Is.EqualTo(55101));
+        Assert.That(defaultEntry.Port, Is.EqualTo(11001));
     }
 
     [Test]

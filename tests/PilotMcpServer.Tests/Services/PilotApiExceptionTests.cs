@@ -31,7 +31,7 @@ public class PilotApiExceptionTests
             problem,
             "{\"extra\":\"context\"}",
             HttpMethod.Get,
-            new Uri("http://localhost:55101/categories/get-all"),
+            new Uri("http://localhost:11001/categories/get-all"),
             new MediaTypeHeaderValue("application/problem+json"));
 
         Assert.That(exception, Is.InstanceOf<McpException>());

@@ -17,12 +17,12 @@ Create a C# MCP server that will allow interaction with the Pilot APIs.
 - The APIs available to consume can be found in the following table.  This information should be stored in a way that is easy to update (like a configuration), but would be included within the MCP Server to avoid modification by a bad actor:
 	| Description                      | Base Host | Port  |
 	| -------------------------------- | --------- | ----- |
-	| .NET Core with SQL Server        | localhost | 55101 |
-	| .NET Core with PostgreSQL        | localhost | 55201 |
-	| Java Spring Boot with SQL Server | localhost | 55301 |
-	| Java Spring Boot with PostgreSQL | localhost | 55401 |
-	| Python with SQL Server           | localhost | 55701 |
-	| Python with PostgreSQL           | localhost | 55801 |
+	| .NET Core with SQL Server        | localhost | 11001 |
+	| .NET Core with PostgreSQL        | localhost | 11101 |
+	| Java Spring Boot with SQL Server | localhost | 11201 |
+	| Java Spring Boot with PostgreSQL | localhost | 11301 |
+	| Python with SQL Server           | localhost | 11401 |
+	| Python with PostgreSQL           | localhost | 11501 |
 - The same endpoints are available across all the APIs and are described in this OpenAPI specification: `\shared\PilotSharedSource\OpenAPI\PilotApi_v1.yaml`.
 	A. Include method signatures: Names, argument types, and return values for each method to ensure strong typing.
 	B. Include clear descriptions for the [Description] or [McpServerTool] custom attributes. These descriptions are critically exposed to external LLMs to help them identify when and how to invoke that specific tool.

@@ -11,13 +11,13 @@ public class AboutResponseTests
     {
         var about = new AboutResponse
         {
-            Name = "PilotApiDotNet",
+            Name = "PilotMcpServerDotNet",
             ApiVersion = "1.0.0",
             BuildVersion = "1.0.0.456",
             DeployDate = "2026-01-15",
         };
 
-        Assert.That(about.Name, Is.EqualTo("PilotApiDotNet"));
+        Assert.That(about.Name, Is.EqualTo("PilotMcpServerDotNet"));
         Assert.That(about.ApiVersion, Is.EqualTo("1.0.0"));
         Assert.That(about.BuildVersion, Is.EqualTo("1.0.0.456"));
         Assert.That(about.DeployDate, Is.EqualTo("2026-01-15"));
@@ -26,12 +26,12 @@ public class AboutResponseTests
     [Test]
     public void AboutResponse_Deserialize_MapsAllPropertiesFromApiJson_Test()
     {
-        const string json = """{"name":"PilotApiDotNet","apiVersion":"1.0.0","buildVersion":"1.0.0.456","deployDate":"2026-01-15"}""";
+        const string json = """{"name":"PilotMcpServerDotNet","apiVersion":"1.0.0","buildVersion":"1.0.0.456","deployDate":"2026-01-15"}""";
 
         var about = JsonSerializer.Deserialize<AboutResponse>(json);
 
         Assert.That(about, Is.Not.Null);
-        Assert.That(about!.Name, Is.EqualTo("PilotApiDotNet"));
+        Assert.That(about!.Name, Is.EqualTo("PilotMcpServerDotNet"));
         Assert.That(about.ApiVersion, Is.EqualTo("1.0.0"));
         Assert.That(about.BuildVersion, Is.EqualTo("1.0.0.456"));
         Assert.That(about.DeployDate, Is.EqualTo("2026-01-15"));

@@ -112,7 +112,7 @@ public class HostBuilderExtensionsTests
 
 		var security = configuration.GetSection(SecurityOptions.SectionName).Get<SecurityOptions>();
 
-		Assert.That(security!.IdpHostBaseUrl, Is.EqualTo("http://localhost:55001"));
+		Assert.That(security!.IdpHostBaseUrl, Is.EqualTo("http://localhost:11141"));
 	}
 
 	[Test]
