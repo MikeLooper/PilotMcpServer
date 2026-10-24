@@ -98,8 +98,8 @@ The Pilot API is deployed in six equivalent flavors, all implementing the same c
 | .NET Core with PostgreSQL          | localhost | pilot-api-dotnet-postgres    | 11101 |
 | Java Spring Boot with SQL Server   | localhost | pilot-api-java-mssql         | 11201 |
 | Java Spring Boot with PostgreSQL   | localhost | pilot-api-java-postgres      | 11301 |
-| Python with SQL Server             | localhost | pilot-api-python-mssql       | 11601 |
-| Python with PostgreSQL             | localhost | pilot-api-python-postgres    | 11701 |
+| Python with SQL Server             | localhost | pilot-api-python-mssql       | 11401 |
+| Python with PostgreSQL             | localhost | pilot-api-python-postgres    | 11501 |
 
 ### Docker hostname selection (`RUNNING_IN_DOCKER`)
 
