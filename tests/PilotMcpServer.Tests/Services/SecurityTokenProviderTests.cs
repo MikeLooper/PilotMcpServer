@@ -31,7 +31,7 @@ public class SecurityTokenProviderTests
 		var options = Options.Create(new SecurityOptions
 		{
 			Active = true,
-			IdpHostBaseUrl = "http://localhost:55001",
+			IdpHostBaseUrl = "http://localhost:11141",
 			IdpHostRealm = "local-realm",
 			IdpHostClientId = "local-client",
 			IdpHostUsername = "working_admin_user",
@@ -52,7 +52,7 @@ public class SecurityTokenProviderTests
 		var options = Options.Create(new SecurityOptions
 		{
 			Active = true,
-			IdpHostBaseUrl = "http://localhost:55001",
+			IdpHostBaseUrl = "http://localhost:11141",
 			IdpHostRealm = "local-realm",
 			IdpHostClientId = "local-client",
 			IdpHostUsername = "working_admin_user",
@@ -76,7 +76,7 @@ public class SecurityTokenProviderTests
 		var options = Options.Create(new SecurityOptions
 		{
 			Active = true,
-			IdpHostBaseUrl = "http://localhost:55001",
+			IdpHostBaseUrl = "http://localhost:11141",
 			IdpHostRealm = "local-realm",
 			IdpHostClientId = "local-client",
 			IdpHostUsername = "working_admin_user",
@@ -97,7 +97,7 @@ public class SecurityTokenProviderTests
 		var options = Options.Create(new SecurityOptions
 		{
 			Active = true,
-			IdpHostBaseUrl = "http://localhost:55001",
+			IdpHostBaseUrl = "http://localhost:11141",
 			IdpHostRealm = "local-realm",
 			IdpHostClientId = "local-client",
 			IdpHostUsername = "working_admin_user",
@@ -109,6 +109,6 @@ public class SecurityTokenProviderTests
 
 		Assert.That(handler.LastRequestBody, Does.Contain("client_id=local-client"));
 		Assert.That(handler.LastRequestBody, Does.Contain("username=working_admin_user"));
-		Assert.That(handler.LastRequest?.RequestUri?.ToString(), Is.EqualTo("http://localhost:55001/realms/local-realm/protocol/openid-connect/token"));
+		Assert.That(handler.LastRequest?.RequestUri?.ToString(), Is.EqualTo("http://localhost:11141/realms/local-realm/protocol/openid-connect/token"));
 	}
 }

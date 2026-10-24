@@ -27,7 +27,7 @@ public class PilotHttpClientTests
 
         Assert.That(result, Has.Count.EqualTo(1));
         Assert.That(result[0].CategoryName, Is.EqualTo("Beverages"));
-        Assert.That(handler.LastRequest!.RequestUri!.ToString(), Is.EqualTo("http://localhost:55101/categories/get-all"));
+        Assert.That(handler.LastRequest!.RequestUri!.ToString(), Is.EqualTo("http://localhost:11001/categories/get-all"));
         Assert.That(handler.LastRequest.Method, Is.EqualTo(HttpMethod.Get));
     }
 
@@ -38,7 +38,7 @@ public class PilotHttpClientTests
 
         await client.GetJsonListAsync<CategoryDto>("/categories/get-all", "Python with PostgreSQL", CancellationToken.None);
 
-        Assert.That(handler.LastRequest!.RequestUri!.ToString(), Is.EqualTo("http://localhost:55601/categories/get-all"));
+        Assert.That(handler.LastRequest!.RequestUri!.ToString(), Is.EqualTo("http://localhost:11501/categories/get-all"));
     }
 
     [Test]
@@ -114,7 +114,7 @@ public class PilotHttpClientTests
         await client.DeleteAsync("/categories/delete/1", null, CancellationToken.None);
 
         Assert.That(handler.LastRequest!.Method, Is.EqualTo(HttpMethod.Delete));
-        Assert.That(handler.LastRequest.RequestUri!.ToString(), Is.EqualTo("http://localhost:55101/categories/delete/1"));
+        Assert.That(handler.LastRequest.RequestUri!.ToString(), Is.EqualTo("http://localhost:11001/categories/delete/1"));
     }
 
     [Test]
@@ -144,13 +144,13 @@ public class PilotHttpClientTests
     [Test]
     public async Task PilotHttpClient_GetAboutAsync_DeserializesAboutResponseForGivenEndpoint_Test()
     {
-        var (client, handler) = CreateClient(HttpStatusCode.OK, """{"name":"PilotApiDotNet","apiVersion":"1.0.0","buildVersion":"1.0.0.123","deployDate":"2026-01-01"}""");
+        var (client, handler) = CreateClient(HttpStatusCode.OK, """{"name":"PilotMcpServerDotNet","apiVersion":"1.0.0","buildVersion":"1.0.0.123","deployDate":"2026-01-01"}""");
         var endpoint = PilotApiCatalog.Default;
 
         var result = await client.GetAboutAsync(endpoint, CancellationToken.None);
 
-        Assert.That(result.Name, Is.EqualTo("PilotApiDotNet"));
+        Assert.That(result.Name, Is.EqualTo("PilotMcpServerDotNet"));
         Assert.That(result.ApiVersion, Is.EqualTo("1.0.0"));
-        Assert.That(handler.LastRequest!.RequestUri!.ToString(), Is.EqualTo("http://localhost:55101/about"));
+        Assert.That(handler.LastRequest!.RequestUri!.ToString(), Is.EqualTo("http://localhost:11001/about"));
     }
 }
