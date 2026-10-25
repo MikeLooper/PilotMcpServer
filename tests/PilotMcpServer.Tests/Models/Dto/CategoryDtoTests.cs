@@ -9,7 +9,7 @@ public class CategoryDtoTests
     [Test]
     public void CategoryDto_Deserialize_MapsAllPropertiesFromApiJson_Test()
     {
-        const string json = """{"categoryID":1,"categoryName":"Beverages","description":"Soft drinks, coffees, teas, beers, and ales"}""";
+        const string json = """{"categoryId":1,"categoryName":"Beverages","description":"Soft drinks, coffees, teas, beers, and ales"}""";
 
         var category = JsonSerializer.Deserialize<CategoryDto>(json);
 
@@ -20,15 +20,15 @@ public class CategoryDtoTests
     }
 
     [Test]
-    public void CategoryDto_Serialize_UsesApiPropertyNamesNotCamelCase_Test()
+    public void CategoryDto_Serialize_UsesOpenApiPropertyNames_Test()
     {
         var category = new CategoryDto { CategoryId = 3, CategoryName = "Produce" };
 
         var json = JsonSerializer.Serialize(category);
 
-        Assert.That(json, Does.Contain("\"categoryID\":3"));
+        Assert.That(json, Does.Contain("\"categoryId\":3"));
         Assert.That(json, Does.Contain("\"categoryName\":\"Produce\""));
-        Assert.That(json, Does.Not.Contain("\"categoryId\""));
+        Assert.That(json, Does.Not.Contain("\"CategoryId\""));
     }
 
     [Test]
@@ -50,5 +50,26 @@ public class CategoryDtoTests
 
         Assert.That(category.Description, Is.Null);
         Assert.That(category.Picture, Is.Null);
+    }
+
+    [Test]
+    public void CategoryDto_Deserialize_WithoutId_LeavesIdNull_Test()
+    {
+        const string json = """{"categoryName":"Snacks"}""";
+
+        var dto = JsonSerializer.Deserialize<CategoryDto>(json);
+
+        Assert.That(dto, Is.Not.Null);
+        Assert.That(dto!.CategoryId, Is.Null);
+    }
+
+    [Test]
+    public void CategoryDto_Serialize_WithoutId_WritesNullId_Test()
+    {
+        var dto = new CategoryDto { CategoryName = "Snacks" };
+
+        var json = JsonSerializer.Serialize(dto);
+
+        Assert.That(json, Does.Contain("\"categoryId\":null"));
     }
 }

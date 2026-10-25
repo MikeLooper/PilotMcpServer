@@ -9,7 +9,7 @@ public class OrderDetailDtoTests
     [Test]
     public void OrderDetailDto_Deserialize_MapsAllPropertiesFromApiJson_Test()
     {
-        const string json = """{"orderID":10248,"productID":11,"unitPrice":14,"quantity":12,"discount":0.15}""";
+        const string json = """{"orderId":10248,"productId":11,"unitPrice":14,"quantity":12,"discount":0.15}""";
 
         var orderDetail = JsonSerializer.Deserialize<OrderDetailDto>(json);
 
@@ -22,14 +22,14 @@ public class OrderDetailDtoTests
     }
 
     [Test]
-    public void OrderDetailDto_Serialize_UsesApiPropertyNamesNotCamelCase_Test()
+    public void OrderDetailDto_Serialize_UsesOpenApiPropertyNames_Test()
     {
         var orderDetail = new OrderDetailDto { OrderId = 10248, ProductId = 11, UnitPrice = 14, Quantity = 12, Discount = 0.15f };
 
         var json = JsonSerializer.Serialize(orderDetail);
 
-        Assert.That(json, Does.Contain("\"orderID\":10248"));
-        Assert.That(json, Does.Contain("\"productID\":11"));
+        Assert.That(json, Does.Contain("\"orderId\":10248"));
+        Assert.That(json, Does.Contain("\"productId\":11"));
         Assert.That(json, Does.Contain("\"unitPrice\":14"));
         Assert.That(json, Does.Contain("\"quantity\":12"));
         Assert.That(json, Does.Contain("\"discount\":0.15"));

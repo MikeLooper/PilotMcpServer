@@ -11,7 +11,7 @@ public class CustomerDtoTests
     {
         const string json = """
             {
-              "customerID": "ALFKI",
+              "customerId": "ALFKI",
               "companyName": "Alfreds Futterkiste",
               "contactName": "Maria Anders",
               "contactTitle": "Sales Representative",
@@ -42,13 +42,13 @@ public class CustomerDtoTests
     }
 
     [Test]
-    public void CustomerDto_Serialize_UsesApiPropertyNamesNotCamelCase_Test()
+    public void CustomerDto_Serialize_UsesOpenApiPropertyNames_Test()
     {
         var customer = new CustomerDto { CustomerId = "ALFKI", CompanyName = "Alfreds Futterkiste" };
 
         var json = JsonSerializer.Serialize(customer);
 
-        Assert.That(json, Does.Contain("\"customerID\":\"ALFKI\""));
+        Assert.That(json, Does.Contain("\"customerId\":\"ALFKI\""));
         Assert.That(json, Does.Contain("\"companyName\":\"Alfreds Futterkiste\""));
     }
 

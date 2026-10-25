@@ -11,7 +11,7 @@ public class SupplierDtoTests
     {
         const string json = """
             {
-              "supplierID": 1,
+              "supplierId": 1,
               "companyName": "Exotic Liquids",
               "contactName": "Charlotte Cooper",
               "contactTitle": "Purchasing Manager",
@@ -44,13 +44,13 @@ public class SupplierDtoTests
     }
 
     [Test]
-    public void SupplierDto_Serialize_UsesApiPropertyNamesNotCamelCase_Test()
+    public void SupplierDto_Serialize_UsesOpenApiPropertyNames_Test()
     {
         var supplier = new SupplierDto { SupplierId = 1, CompanyName = "Exotic Liquids" };
 
         var json = JsonSerializer.Serialize(supplier);
 
-        Assert.That(json, Does.Contain("\"supplierID\":1"));
+        Assert.That(json, Does.Contain("\"supplierId\":1"));
         Assert.That(json, Does.Contain("\"companyName\":\"Exotic Liquids\""));
     }
 
@@ -69,5 +69,26 @@ public class SupplierDtoTests
         Assert.That(supplier.Phone, Is.Null);
         Assert.That(supplier.Fax, Is.Null);
         Assert.That(supplier.HomePage, Is.Null);
+    }
+
+    [Test]
+    public void SupplierDto_Deserialize_WithoutId_LeavesIdNull_Test()
+    {
+        const string json = """{"companyName":"Exotic Liquids"}""";
+
+        var dto = JsonSerializer.Deserialize<SupplierDto>(json);
+
+        Assert.That(dto, Is.Not.Null);
+        Assert.That(dto!.SupplierId, Is.Null);
+    }
+
+    [Test]
+    public void SupplierDto_Serialize_WithoutId_WritesNullId_Test()
+    {
+        var dto = new SupplierDto { CompanyName = "Exotic Liquids" };
+
+        var json = JsonSerializer.Serialize(dto);
+
+        Assert.That(json, Does.Contain("\"supplierId\":null"));
     }
 }

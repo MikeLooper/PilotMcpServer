@@ -18,7 +18,7 @@ public class CategoriesToolsTests
         client.Setup(c => c.GetJsonListAsync<CategoryDto>("/v1/categories/get-all", "custom-api", It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var result = await tools.GetAllCategoriesAsync("custom-api", CancellationToken.None);
+        var result = await tools.GetAllCategoriesAsync(apiName: "custom-api", cancellationToken: CancellationToken.None);
 
         Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
@@ -58,8 +58,8 @@ public class CategoriesToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new CategoriesTools(client.Object);
         var category = new CategoryDto { CategoryId = 0, CategoryName = "Snacks" };
-        var expected = new AddResponse { Id = 10 };
-        client.Setup(c => c.PostJsonAsync<CategoryDto, AddResponse>("/v1/categories/add", category, null, It.IsAny<CancellationToken>()))
+        var expected = new AddResponseInt { Id = 10 };
+        client.Setup(c => c.PostJsonAsync<CategoryDto, AddResponseInt>("/v1/categories/add", category, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.AddCategoryAsync(category, null, CancellationToken.None);
@@ -92,6 +92,36 @@ public class CategoriesToolsTests
 
         await tools.DeleteCategoryAsync(8, null, CancellationToken.None);
 
+        client.VerifyAll();
+    }
+
+    [Test]
+    public async Task CategoriesTools_GetAllCategoriesAsync_WithPaging_AppendsPageAndPageSizeQuery_Test()
+    {
+        var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
+        var tools = new CategoriesTools(client.Object);
+        var expected = new List<CategoryDto>();
+        client.Setup(c => c.GetJsonListAsync<CategoryDto>("/v1/categories/get-all?page=2&pageSize=50", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await tools.GetAllCategoriesAsync(2, 50, null, CancellationToken.None);
+
+        Assert.That(result, Is.SameAs(expected));
+        client.VerifyAll();
+    }
+
+    [Test]
+    public async Task CategoriesTools_GetAllCategoriesAsync_WithPageSizeOnly_AppendsOnlyPageSizeQuery_Test()
+    {
+        var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
+        var tools = new CategoriesTools(client.Object);
+        var expected = new List<CategoryDto>();
+        client.Setup(c => c.GetJsonListAsync<CategoryDto>("/v1/categories/get-all?pageSize=5", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await tools.GetAllCategoriesAsync(pageSize: 5, cancellationToken: CancellationToken.None);
+
+        Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
     }
 }

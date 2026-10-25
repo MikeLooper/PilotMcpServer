@@ -45,14 +45,19 @@ public static class HostBuilderExtensions
 		return configuration.AddJsonStream(stream);
 	}
 
-	/// <summary>Registers the Pilot domain services: the security token provider, the Pilot HTTP client, and API selection state.</summary>
+	/// <summary>
+	/// Registers the Pilot domain services: the security token provider, the Pilot HTTP client (with its
+	/// correlation ID and security message handlers), and API selection state.
+	/// </summary>
 	public static IServiceCollection AddPilotDomainServices(this IServiceCollection services, IConfiguration configuration)
 	{
 		services.Configure<SecurityOptions>(configuration.GetSection(SecurityOptions.SectionName));
 		services.AddHttpClient<ISecurityTokenProvider, SecurityTokenProvider>();
+		services.AddTransient<CorrelationIdDelegatingHandler>();
 		services.AddTransient<SecurityDelegatingHandler>();
 		services
 			.AddHttpClient<IPilotHttpClient, PilotHttpClient>()
+			.AddHttpMessageHandler<CorrelationIdDelegatingHandler>()
 			.AddHttpMessageHandler<SecurityDelegatingHandler>();
 		services.AddSingleton<IPilotApiSelection, PilotApiSelectionState>();
 

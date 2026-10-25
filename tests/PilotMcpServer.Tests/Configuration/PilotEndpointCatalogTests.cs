@@ -36,7 +36,7 @@ public class PilotEndpointCatalogTests
 
         Assert.That(entry, Is.Not.Null);
         Assert.That(entry!.HttpMethod, Is.EqualTo("GET"));
-        Assert.That(entry.PathTemplate, Is.EqualTo("/categories/get-all"));
+        Assert.That(entry.PathTemplate, Is.EqualTo("/v1/categories/get-all"));
     }
 
     [Test]
@@ -47,8 +47,8 @@ public class PilotEndpointCatalogTests
         var get = all.Single(e => e.Resource == "OrderDetails" && e.Operation == "Get");
         var delete = all.Single(e => e.Resource == "OrderDetails" && e.Operation == "Delete");
 
-        Assert.That(get.PathTemplate, Is.EqualTo("/order-details/get/product/{productId}/order/{orderId}"));
-        Assert.That(delete.PathTemplate, Is.EqualTo("/order-details/delete/product/{productId}/order/{orderId}"));
+        Assert.That(get.PathTemplate, Is.EqualTo("/v1/order-details/get/product/{productId}/order/{orderId}"));
+        Assert.That(delete.PathTemplate, Is.EqualTo("/v1/order-details/delete/product/{productId}/order/{orderId}"));
     }
 
     [Test]

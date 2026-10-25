@@ -9,11 +9,11 @@ namespace PilotMcpServer.Models.Dto;
 public sealed class CategoryDto
 {
 	/// <summary>
-	/// Unique identifier of the category.
+	/// Unique identifier of the category. Omit when adding a new category; the API assigns it.
 	/// </summary>
-	[JsonPropertyName("categoryID")]
-	[Description("Unique identifier of the category.")]
-	public required int CategoryId { get; init; }
+	[JsonPropertyName("categoryId")]
+	[Description("Unique identifier of the category. Omit when adding a new category; the API assigns it.")]
+	public int? CategoryId { get; init; }
 	
 	/// <summary>
 	/// Name of the category.

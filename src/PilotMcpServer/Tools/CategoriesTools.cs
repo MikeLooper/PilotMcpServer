@@ -11,11 +11,13 @@ namespace PilotMcpServer.Tools;
 public sealed class CategoriesTools(IPilotHttpClient client) : ToolBase
 {
     [McpServerTool(Name = "get_all_categories")]
-    [Description("Retrieves every product category from the selected Pilot API.")]
+    [Description("Retrieves a page of product categories from the selected Pilot API. The API returns the first page (page 0) of 20 records when page and pageSize are omitted.")]
     public Task<IReadOnlyList<CategoryDto>> GetAllCategoriesAsync(
+        [Description("Optional. Zero-based number of the page to start with. Defaults to 0 when omitted.")] int? page = null,
+        [Description("Optional. Number of records to return. Defaults to 20 when omitted.")] int? pageSize = null,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
-        => client.GetJsonListAsync<CategoryDto>($"/v{this.ApiVersion}/categories/get-all", apiName, cancellationToken);
+        => client.GetJsonListAsync<CategoryDto>(WithPaging($"/v{this.ApiVersion}/categories/get-all", page, pageSize), apiName, cancellationToken);
 
     [McpServerTool(Name = "get_category")]
     [Description("Retrieves a single product category by its numeric ID. Returns null if no category with that ID exists.")]
@@ -27,16 +29,16 @@ public sealed class CategoriesTools(IPilotHttpClient client) : ToolBase
 
     [McpServerTool(Name = "add_category")]
     [Description("Creates a new product category. Returns the identifier assigned to the new record.")]
-    public Task<AddResponse> AddCategoryAsync(
+    public Task<AddResponseInt> AddCategoryAsync(
         [Description("The category to create. Required.")] CategoryDto category,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
-        => client.PostJsonAsync<CategoryDto, AddResponse>($"/v{this.ApiVersion}/categories/add", category, apiName, cancellationToken);
+        => client.PostJsonAsync<CategoryDto, AddResponseInt>($"/v{this.ApiVersion}/categories/add", category, apiName, cancellationToken);
 
     [McpServerTool(Name = "update_category")]
-    [Description("Updates an existing product category, identified by its categoryID.")]
+    [Description("Updates an existing product category, identified by its categoryId.")]
     public Task UpdateCategoryAsync(
-        [Description("The category to update, including its existing categoryID. Required.")] CategoryDto category,
+        [Description("The category to update, including its existing categoryId. Required.")] CategoryDto category,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.PutJsonAsync($"/v{this.ApiVersion}/categories/update", category, apiName, cancellationToken);

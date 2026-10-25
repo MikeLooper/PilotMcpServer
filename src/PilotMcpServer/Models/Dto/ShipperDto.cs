@@ -9,18 +9,18 @@ namespace PilotMcpServer.Models.Dto;
 public sealed class ShipperDto
 {
 	/// <summary>
-	/// Unique identifier of the shipper.
+	/// Unique identifier of the shipper. Omit when adding a new shipper; the API assigns it.
 	/// </summary>
-	[JsonPropertyName("shipperID")]
-	[Description("Unique identifier of the shipper.")]
-	public required int ShipperId { get; init; }
+	[JsonPropertyName("shipperId")]
+	[Description("Unique identifier of the shipper. Omit when adding a new shipper; the API assigns it.")]
+	public int? ShipperId { get; init; }
 
 	/// <summary>
 	/// Name of the shipping company.
 	/// </summary>
 	[JsonPropertyName("companyName")]
 	[Description("Name of the shipping company.")]
-	public required string CompanyName { get; init; }
+	public string? CompanyName { get; init; }
 	
 	/// <summary>
 	/// Phone number for the shipping company.

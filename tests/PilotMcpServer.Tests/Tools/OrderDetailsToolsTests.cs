@@ -18,7 +18,7 @@ public class OrderDetailsToolsTests
         client.Setup(c => c.GetJsonListAsync<OrderDetailDto>("/v1/order-details/get-all", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var result = await tools.GetAllOrderDetailsAsync(null, CancellationToken.None);
+        var result = await tools.GetAllOrderDetailsAsync(apiName: null, cancellationToken: CancellationToken.None);
 
         Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
@@ -45,8 +45,8 @@ public class OrderDetailsToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new OrderDetailsTools(client.Object);
         var orderDetail = new OrderDetailDto { OrderId = 10248, ProductId = 11, UnitPrice = 14, Quantity = 12, Discount = 0 };
-        var expected = new AddResponse { Id = 1 };
-        client.Setup(c => c.PostJsonAsync<OrderDetailDto, AddResponse>("/v1/order-details/add", orderDetail, null, It.IsAny<CancellationToken>()))
+        var expected = new AddResponseOrderDetails { OrderId = 10248, ProductId = 11 };
+        client.Setup(c => c.PostJsonAsync<OrderDetailDto, AddResponseOrderDetails>("/v1/order-details/add", orderDetail, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.AddOrderDetailAsync(orderDetail, null, CancellationToken.None);
@@ -79,6 +79,21 @@ public class OrderDetailsToolsTests
 
         await tools.DeleteOrderDetailAsync(11, 10248, null, CancellationToken.None);
 
+        client.VerifyAll();
+    }
+
+    [Test]
+    public async Task OrderDetailsTools_GetAllOrderDetailsAsync_WithPaging_AppendsPageAndPageSizeQuery_Test()
+    {
+        var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
+        var tools = new OrderDetailsTools(client.Object);
+        var expected = new List<OrderDetailDto>();
+        client.Setup(c => c.GetJsonListAsync<OrderDetailDto>("/v1/order-details/get-all?page=2&pageSize=50", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await tools.GetAllOrderDetailsAsync(2, 50, null, CancellationToken.None);
+
+        Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
     }
 }

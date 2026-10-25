@@ -21,7 +21,7 @@ public class PilotHttpClientTests
     [Test]
     public async Task PilotHttpClient_GetJsonListAsync_NoOverride_BuildsUriAgainstSelectedApiAndDeserializesList_Test()
     {
-        var (client, handler) = CreateClient(HttpStatusCode.OK, """[{"categoryID":1,"categoryName":"Beverages"}]""");
+        var (client, handler) = CreateClient(HttpStatusCode.OK, """[{"categoryId":1,"categoryName":"Beverages"}]""");
 
         var result = await client.GetJsonListAsync<CategoryDto>("/categories/get-all", null, CancellationToken.None);
 
@@ -72,7 +72,7 @@ public class PilotHttpClientTests
     [Test]
     public async Task PilotHttpClient_GetJsonAsync_SuccessResponse_ReturnsDeserializedObject_Test()
     {
-        var (client, _) = CreateClient(HttpStatusCode.OK, """{"categoryID":7,"categoryName":"Produce"}""");
+        var (client, _) = CreateClient(HttpStatusCode.OK, """{"categoryId":7,"categoryName":"Produce"}""");
 
         var result = await client.GetJsonAsync<CategoryDto>("/categories/get/7", null, CancellationToken.None);
 
@@ -82,12 +82,27 @@ public class PilotHttpClientTests
     }
 
     [Test]
+    public async Task PilotHttpClient_GetJsonAsync_NumericFieldsAsStrings_DeserializesPerOpenApiIntegerOrStringType_Test()
+    {
+        var (client, _) = CreateClient(HttpStatusCode.OK, """{"orderId":"10248","productId":"11","unitPrice":"14.5","quantity":"12","discount":"0.15"}""");
+
+        var result = await client.GetJsonAsync<OrderDetailDto>("/v1/order-details/get/product/11/order/10248", null, CancellationToken.None);
+
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.OrderId, Is.EqualTo(10248));
+        Assert.That(result.ProductId, Is.EqualTo(11));
+        Assert.That(result.UnitPrice, Is.EqualTo(14.5));
+        Assert.That(result.Quantity, Is.EqualTo(12));
+        Assert.That(result.Discount, Is.EqualTo(0.15f));
+    }
+
+    [Test]
     public async Task PilotHttpClient_PostJsonAsync_SendsBodyAndReturnsTypedResponse_Test()
     {
         var (client, handler) = CreateClient(HttpStatusCode.OK, """{"id":42}""");
-        var category = new CategoryDto { CategoryId = 0, CategoryName = "Snacks" };
+        var category = new CategoryDto { CategoryName = "Snacks" };
 
-        var result = await client.PostJsonAsync<CategoryDto, AddResponse>("/categories/add", category, null, CancellationToken.None);
+        var result = await client.PostJsonAsync<CategoryDto, AddResponseInt>("/categories/add", category, null, CancellationToken.None);
 
         Assert.That(result.Id, Is.EqualTo(42));
         Assert.That(handler.LastRequest!.Method, Is.EqualTo(HttpMethod.Post));

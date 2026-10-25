@@ -11,7 +11,7 @@ public sealed class CustomerDto
 	/// <summary>
 	/// Unique identifier of the customer (a 5-character code).
 	/// </summary>
-	[JsonPropertyName("customerID")]
+	[JsonPropertyName("customerId")]
 	[Description("Unique identifier of the customer (a 5-character code).")]
 	public required string CustomerId { get; init; }
 	

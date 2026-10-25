@@ -11,14 +11,14 @@ public sealed class OrderDetailDto
 	/// <summary>
 	/// Identifier of the order this line belongs to.
 	/// </summary>
-	[JsonPropertyName("orderID")]
+	[JsonPropertyName("orderId")]
 	[Description("Identifier of the order this line belongs to.")]
 	public required int OrderId { get; init; }
 
 	/// <summary>
 	/// Identifier of the product on this order line.
 	/// </summary>
-	[JsonPropertyName("productID")]
+	[JsonPropertyName("productId")]
 	[Description("Identifier of the product on this order line.")]
 	public required int ProductId { get; init; }
 

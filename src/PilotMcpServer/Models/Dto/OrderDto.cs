@@ -9,23 +9,23 @@ namespace PilotMcpServer.Models.Dto;
 public sealed class OrderDto
 {
 	/// <summary>
-	/// Unique identifier of the order.
+	/// Unique identifier of the order. Omit when adding a new order; the API assigns it.
 	/// </summary>
-	[JsonPropertyName("orderID")]
-	[Description("Unique identifier of the order.")]
-	public required int OrderId { get; init; }
+	[JsonPropertyName("orderId")]
+	[Description("Unique identifier of the order. Omit when adding a new order; the API assigns it.")]
+	public int? OrderId { get; init; }
 	
 	/// <summary>
 	/// Identifier of the customer who placed the order.
 	/// </summary>
-	[JsonPropertyName("customerID")]
+	[JsonPropertyName("customerId")]
 	[Description("Identifier of the customer who placed the order.")]
 	public string? CustomerId { get; init; }
 
 	/// <summary>
 	/// Identifier of the employee who handled the order.
 	/// </summary>
-	[JsonPropertyName("employeeID")]
+	[JsonPropertyName("employeeId")]
 	[Description("Identifier of the employee who handled the order.")]
 	public int? EmployeeId { get; init; }
 

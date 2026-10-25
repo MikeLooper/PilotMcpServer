@@ -9,11 +9,11 @@ namespace PilotMcpServer.Models.Dto;
 public sealed class ProductDto
 {
 	/// <summary>
-	/// Unique identifier of the product.
+	/// Unique identifier of the product. Omit when adding a new product; the API assigns it.
 	/// </summary>
-	[JsonPropertyName("productID")]
-	[Description("Unique identifier of the product.")]
-	public required int ProductId { get; init; }
+	[JsonPropertyName("productId")]
+	[Description("Unique identifier of the product. Omit when adding a new product; the API assigns it.")]
+	public int? ProductId { get; init; }
 
 	/// <summary>
 	/// Name of the product.
@@ -25,14 +25,14 @@ public sealed class ProductDto
 	/// <summary>
 	/// Identifier of the supplier of this product.
 	/// </summary>
-	[JsonPropertyName("supplierID")]
+	[JsonPropertyName("supplierId")]
 	[Description("Identifier of the supplier of this product.")]
 	public int? SupplierId { get; init; }
 
 	/// <summary>
 	/// Identifier of the category this product belongs to.
 	/// </summary>
-	[JsonPropertyName("categoryID")]
+	[JsonPropertyName("categoryId")]
 	[Description("Identifier of the category this product belongs to.")]
 	public int? CategoryId { get; init; }
 

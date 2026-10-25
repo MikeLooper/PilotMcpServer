@@ -11,11 +11,13 @@ namespace PilotMcpServer.Tools;
 public sealed class EmployeesTools(IPilotHttpClient client) : ToolBase
 {
     [McpServerTool(Name = "get_all_employees")]
-    [Description("Retrieves every employee from the selected Pilot API.")]
+    [Description("Retrieves a page of employees from the selected Pilot API. The API returns the first page (page 0) of 20 records when page and pageSize are omitted.")]
     public Task<IReadOnlyList<EmployeeDto>> GetAllEmployeesAsync(
+        [Description("Optional. Zero-based number of the page to start with. Defaults to 0 when omitted.")] int? page = null,
+        [Description("Optional. Number of records to return. Defaults to 20 when omitted.")] int? pageSize = null,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
-        => client.GetJsonListAsync<EmployeeDto>($"/v{this.ApiVersion}/employees/get-all", apiName, cancellationToken);
+        => client.GetJsonListAsync<EmployeeDto>(WithPaging($"/v{this.ApiVersion}/employees/get-all", page, pageSize), apiName, cancellationToken);
 
     [McpServerTool(Name = "get_employee")]
     [Description("Retrieves a single employee by its numeric ID. Returns null if no employee with that ID exists.")]
@@ -27,16 +29,16 @@ public sealed class EmployeesTools(IPilotHttpClient client) : ToolBase
 
     [McpServerTool(Name = "add_employee")]
     [Description("Creates a new employee. Returns the identifier assigned to the new record.")]
-    public Task<AddResponse> AddEmployeeAsync(
+    public Task<AddResponseInt> AddEmployeeAsync(
         [Description("The employee to create. Required.")] EmployeeDto employee,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
-        => client.PostJsonAsync<EmployeeDto, AddResponse>($"/v{this.ApiVersion}/employees/add", employee, apiName, cancellationToken);
+        => client.PostJsonAsync<EmployeeDto, AddResponseInt>($"/v{this.ApiVersion}/employees/add", employee, apiName, cancellationToken);
 
     [McpServerTool(Name = "update_employee")]
-    [Description("Updates an existing employee, identified by its employeeID.")]
+    [Description("Updates an existing employee, identified by its employeeId.")]
     public Task UpdateEmployeeAsync(
-        [Description("The employee to update, including its existing employeeID. Required.")] EmployeeDto employee,
+        [Description("The employee to update, including its existing employeeId. Required.")] EmployeeDto employee,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.PutJsonAsync($"/v{this.ApiVersion}/employees/update", employee, apiName, cancellationToken);

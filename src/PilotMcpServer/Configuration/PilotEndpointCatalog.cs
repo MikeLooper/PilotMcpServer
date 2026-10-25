@@ -28,6 +28,7 @@ public static class PilotEndpointCatalog
 	private static IReadOnlyList<EndpointSummary> BuildCatalog()
 	{
 		var summaries = new List<EndpointSummary>();
+		var versionPrefix = $"/v{PilotApiCatalog.Catalog.ApiVersion}";
 
 		foreach (var resource in Resources)
 		{
@@ -36,15 +37,15 @@ public static class PilotEndpointCatalog
 				Resource = resource.Name,
 				Operation = "GetAll",
 				HttpMethod = "GET",
-				PathTemplate = $"/{resource.Route}/get-all",
-				Summary = $"Gets all {resource.Plural} records.",
+				PathTemplate = $"{versionPrefix}/{resource.Route}/get-all",
+				Summary = $"Gets a page of {resource.Plural} records (optional page and pageSize query parameters; defaults to page 0 of 20 records).",
 			});
 			summaries.Add(new EndpointSummary
 			{
 				Resource = resource.Name,
 				Operation = "Get",
 				HttpMethod = "GET",
-				PathTemplate = $"/{resource.Route}/get/{resource.IdRoute}",
+				PathTemplate = $"{versionPrefix}/{resource.Route}/get/{resource.IdRoute}",
 				Summary = $"Gets a single {resource.Singular} record by its {resource.IdDescription}.",
 			});
 			summaries.Add(new EndpointSummary
@@ -52,7 +53,7 @@ public static class PilotEndpointCatalog
 				Resource = resource.Name,
 				Operation = "Add",
 				HttpMethod = "POST",
-				PathTemplate = $"/{resource.Route}/add",
+				PathTemplate = $"{versionPrefix}/{resource.Route}/add",
 				Summary = $"Adds a new {resource.Singular} record.",
 			});
 			summaries.Add(new EndpointSummary
@@ -60,7 +61,7 @@ public static class PilotEndpointCatalog
 				Resource = resource.Name,
 				Operation = "Update",
 				HttpMethod = "PUT",
-				PathTemplate = $"/{resource.Route}/update",
+				PathTemplate = $"{versionPrefix}/{resource.Route}/update",
 				Summary = $"Updates an existing {resource.Singular} record.",
 			});
 			summaries.Add(new EndpointSummary
@@ -68,7 +69,7 @@ public static class PilotEndpointCatalog
 				Resource = resource.Name,
 				Operation = "Delete",
 				HttpMethod = "DELETE",
-				PathTemplate = $"/{resource.Route}/delete/{resource.IdRoute}",
+				PathTemplate = $"{versionPrefix}/{resource.Route}/delete/{resource.IdRoute}",
 				Summary = $"Deletes a {resource.Singular} record by its {resource.IdDescription}.",
 			});
 		}
