@@ -392,6 +392,13 @@ public sealed class OpenApiContractComparer(OpenApiDocument specification, Imple
             {
                 Add(ComplianceSeverity.Info, scope, "schema", $"The specification component '{componentId}' is implemented by client type '{implemented.ComponentName}'.");
             }
+
+            if (specification.Components?.Schemas?.TryGetValue(componentId, out var componentSchema) == true)
+            {
+                var (resolvedSchema, componentNullable) = Unwrap(componentSchema);
+                spec = resolvedSchema;
+                nullableViaComposition |= componentNullable;
+            }
         }
 
         var where = $"{(location.Length == 0 ? "schema" : location)} ({direction.ToString().ToLowerInvariant()})";
