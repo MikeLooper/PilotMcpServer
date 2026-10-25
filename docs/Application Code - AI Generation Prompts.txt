@@ -52,3 +52,19 @@ The non-System API calls include a `X-Correlation-Id` header.  Verify these endp
 The `X-Request-Id` would be ignored for usages within this application.
 
 Update unit tests to match any code changes.
+
+4.
+Create a new directory under the `tests` directory for integration tests.
+Add an integration test file for validating OpenAPI compliance.
+Create one or more tests that will compare the OpenAPI specification found in `\shared\PilotSharedSource\OpenAPI\PilotApi_v1.yaml` against the OpenAPI specification implemented in this application. Ask questions to determine what level of concern (Error, Warn, Information) any differing portions of the OpenAPI specification should be indicated as when a mismatch is found.
+
+How severity is assigned for mis-matches during testing:
+| Level | What it covers |
+| --- | --- |
+| Error (fails the test) | <ul><li>A spec operation isn't implemented</li><li>A required parameter or request body is missing, or its required flag differs</li><li>A 2xx response is missing</li><li>A schema or property is missing</li><li>A base type doesn't match</li><li>Any security mismatch</li><li>Differences in media type, nullability, the required list, format, patterns, defaults, enum or oneOf/anyOf/allOf</li></ul> |
+| Warn | <ul><li>Extra operations, parameters, responses or properties</li><li>A missing optional parameter or 4xx/5xx response</li><li>Document metadata: info, servers, tags, operationIds</li></ul> |
+| Info | <ul><li>Descriptions, and examples</li><li>Alternate types such as [integer, string] vs integer</li><li>Component names</li></ul> |
+
+Update the README with a description of this new testing process and how it is used.
+
+If there are any mis-match areas that need more clarification, ask me.

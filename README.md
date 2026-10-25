@@ -20,6 +20,7 @@ PilotMcpServer/
 │       ├── Services/            # HTTP client + API-selection state
 │       └── Tools/               # MCP tool classes, one per resource
 └── tests/
+    ├── PilotMcpServer.IntegrationTests/  # NUnit integration tests (OpenAPI compliance)
     ├── PilotMcpServer.Tests/    # NUnit + Moq unit tests, mirrors src/ layout
     └── vscode                   # VS Code manual validation and testing
 ```
@@ -53,8 +54,8 @@ git commit -m "Update PilotSharedSource submodule"
 ## Building, testing, and running
 
 ```bash
-dotnet build                 # builds the server and the test project
-dotnet test                  # runs the unit test suite (NUnit + Moq)
+dotnet build                 # builds the server and both test projects
+dotnet test                  # runs the unit tests and the OpenAPI compliance integration tests
 dotnet run --project src/PilotMcpServer   # runs the server (stdio transport — expects an MCP client on the other end)
 ```
 
@@ -150,4 +151,53 @@ Every tool is `async`, takes a `CancellationToken`, and carries a `[Description]
 
 ## Validation and Integration Testing
 
-To validate that the MCP server is working correctly with the APIs, open VS Code in the \tests\vscode directory and follow the directions in the README found in that directory.
+### OpenAPI compliance tests
+
+`tests/PilotMcpServer.IntegrationTests` checks that the Pilot API contract this server implements matches the shared OpenAPI specification, `shared/PilotSharedSource/OpenAPI/PilotApi_v1.yaml`. It catches drift in either direction: a spec change that the client hasn't picked up, or a client change that no longer matches the spec. The tests need no running Pilot API, network access or Docker.
+
+**Running them**
+
+```bash
+git submodule update --init --recursive    # the spec comes from the submodule
+dotnet test tests/PilotMcpServer.IntegrationTests
+```
+
+They also run as part of a plain `dotnet test` and in the GitHub Actions build, which checks out submodules. If the spec file is missing, every test fails with a message telling you to initialize the submodule.
+
+**How the comparison works**
+
+This server is a *client* of the Pilot API and doesn't publish its own OpenAPI document, so the tests derive the implemented contract from the code:
+
+| Part of the contract | Where it comes from |
+| --- | --- |
+| Operations (method, path, tag, summary) | `PilotEndpointCatalog` |
+| Path and query parameters, request body, response type | The signature of the matching `[McpServerTool]` method (e.g. Categories `GetAll` → `CategoriesTools.GetAll*`) |
+| Request and response schemas | The DTO types, read by reflection with the client's own `PilotHttpClient` JSON serializer options |
+| Headers (`X-Correlation-Id`) and bearer authentication | A request for each path passed through the real correlation ID and security delegating handlers, in memory, into a recording stub |
+
+The derived contract is then compared with the spec, which is read with Microsoft.OpenApi. Comparisons are **consumer-compatible**, so whether a difference matters depends on which way the data flows:
+
+- **Requests** (data the client sends) may be stricter than the spec but never looser. For example, sending a non-null value where the spec allows null is fine; being able to send null where the spec forbids it is an error.
+- **Responses** (data the client reads) must accept everything the spec allows the server to return. A response property the client simply ignores is a warning, not an error.
+
+**Severity levels**
+
+| Level | Effect | What it covers |
+| --- | --- | --- |
+| Error | Fails the test | A spec operation that isn't implemented; a required parameter or request body that is missing or can be omitted; a missing 2xx response; a request schema or property that is missing; a base type mismatch; any security mismatch; incompatible media type, nullability, required list, format, pattern, default, enum or oneOf/anyOf/allOf |
+| Warn | Logged only | Extra operations, parameters, responses or properties; missing optional parameters; response properties, schemas or bodies the client doesn't read; document metadata (info, servers, tags, operationIds) |
+| Info | Logged only | Descriptions and examples; alternate types such as `[integer, string]` vs `integer`; component names (e.g. `CategoriesDto` vs `CategoryDto`); differences that are compatible in the direction the data flows |
+
+**Reading the results**
+
+- There is one test per spec operation (e.g. `GET /v1/categories/get-all`), one per spec component (e.g. `#/components/schemas/CategoriesDto`) and one for document-level items. A failing test lists its errors in the assertion message.
+- Each test writes its Warn and Info findings to the test output.
+- The full report, covering every finding at every severity, is written to `OpenApiComplianceReport.md` in the test output directory (e.g. `tests/PilotMcpServer.IntegrationTests/bin/Debug/net10.0/`). It is also attached to the test run.
+
+**When a test fails**
+
+Decide which side is correct. If the spec changed, update the DTOs, tools or `PilotEndpointCatalog` to match it. If the client is right, change the spec in the `PilotSharedSource` repository and then bump the submodule (see [Shared source submodule](#shared-source-submodule)).
+
+### Manual validation in VS Code
+
+To check that the MCP server works correctly against the running APIs, open VS Code in the `tests/vscode` directory and follow the directions in the README found there.
