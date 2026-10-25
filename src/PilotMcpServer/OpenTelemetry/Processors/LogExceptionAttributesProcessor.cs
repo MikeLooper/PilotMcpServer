@@ -35,7 +35,7 @@ public sealed class LogExceptionAttributesProcessor : BaseProcessor<LogRecord>
 	private static bool TryAdd(List<KeyValuePair<string, object?>> attributes, string key, string? value)
 	{
 		if (string.IsNullOrEmpty(value) ||
-			attributes.Exists(attribute => attribute.Value is not null && string.Equals(attribute.Key, key, StringComparison.OrdinalIgnoreCase)))
+			attributes.Exists(attribute => string.Equals(attribute.Key, key, StringComparison.OrdinalIgnoreCase)))
 		{
 			return false;
 		}
