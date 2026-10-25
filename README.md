@@ -16,8 +16,9 @@ PilotMcpServer/
 │   └── PilotMcpServer/          # the MCP server (console app)
 │       ├── Program.cs           # host/DI wiring, stdio transport, logging isolation
 │       ├── Configuration/       # the API catalog and endpoint summary catalog
-│       ├── Models/              # DTOs mirroring the Pilot API's OpenAPI schemas
-│       ├── Services/            # HTTP client + API-selection state
+│       ├── Models/              # DTOs mirroring the Pilot API's OpenAPI schemas, plus RequestSettings
+│       ├── OpenTelemetry/       # OTEL attribute names and span/log record processors
+│       ├── Services/            # HTTP client, API-selection state, request settings
 │       └── Tools/               # MCP tool classes, one per resource
 └── tests/
     ├── PilotMcpServer.IntegrationTests/  # NUnit integration tests (OpenAPI compliance)
@@ -148,6 +149,96 @@ Every data tool accepts an optional `apiName` argument (matching the **Descripti
 - Suppliers
 
 Every tool is `async`, takes a `CancellationToken`, and carries a `[Description]` written for the calling LLM. Request/response DTOs mirror the OpenAPI schemas field-for-field (including which fields are required vs. optional), so payload shape is validated the same way the underlying API validates it.
+
+## OpenTelemetry (OTEL)
+
+The server exports traces, metrics and logs over OTLP to the OpenTelemetry collector in the `otel-collector` Docker container. The collector sends them on to the local Grafana LGTM stack: traces to **Tempo**, metrics to **Mimir** and logs to **Loki**. To start the stack, run `C:\Working\Storage\Dev\GitHub\Docker\Otel\Docker-Otel-builder.bat`, then open Grafana at http://localhost:3000.
+
+Logs still go to stderr as before, and OTEL is added alongside them. No OTEL console exporter is registered, because it writes to stdout, which the stdio transport keeps for JSON-RPC.
+
+### Configuration
+
+The settings are in the `OpenTelemetry` section of the embedded `src/PilotMcpServer/appsettings.json`. Like the rest of that file, they are compiled in, so you rebuild to change them.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `Active` | `true` | `false` turns off all OTEL providers and exporters. |
+| `Host` | `localhost` | Collector host when running outside Docker. |
+| `ContainerName` | `otel-collector` | Collector host when `RUNNING_IN_DOCKER=true` (see [Docker hostname selection](#docker-hostname-selection-running_in_docker)). |
+| `Port` | `4317` | `4317` for OTLP gRPC, `4318` for OTLP HTTP. |
+| `Protocol` | `Grpc` | `Grpc` or `HttpProtobuf`. Change it together with `Port`. |
+| `ServiceName` | `PilotMcpServer` | The `service.name` resource attribute. In Loki this is the `service_name` label, and in Mimir it is the `job` label. |
+
+If the collector isn't running, the server works normally and the telemetry is dropped.
+
+### What is recorded
+
+- **Traces:** one span per MCP request from the ModelContextProtocol SDK (e.g. `tools/call get_category`), with a child span for each outgoing HTTP call: the Pilot API call and the Keycloak token request. The W3C `traceparent` header goes out with each Pilot API call. When the Pilot API is instrumented as well, as `PilotApiDotNet` is, its spans join the same trace.
+- **Metrics:** MCP operation and session durations (`mcp_server_operation_duration_seconds`, `mcp_server_session_duration_seconds`) and the .NET HttpClient metrics (`http_client_request_duration_seconds`, `http_client_active_requests`, etc.).
+- **Logs:** every `ILogger` entry, with the formatted message and scopes. This includes the SDK's "tool completed" and "tool threw an unhandled exception" entries and the HttpClient request/response entries.
+
+### Correlation ID
+
+Each incoming MCP request (each tool call) gets its own `RequestSettings` with a new `CorrelationId` GUID. It is set up by an incoming message filter (`RequestSettingsMessageFilter`) and is available for the whole request through `IRequestSettingsAccessor`. The same value is:
+
+- sent to the Pilot API as the `X-Correlation-Id` header on every request the tool call makes. Before this change, each HTTP request got its own random GUID.
+- added to `Activity.Tags` as **`correlationId`** on the MCP request span and on every span started during the request.
+- added to `LogRecord.Attributes` as **`CorrelationId`** on every log entry written during the request.
+
+Because the Pilot API records the incoming `X-Correlation-Id` too, one ID finds a tool call's log entries in both the MCP server and the API.
+
+### Exception attributes
+
+When a log entry carries an exception, `LogExceptionAttributesProcessor` adds the following attributes:
+
+| Attribute | Value |
+| --- | --- |
+| `Exception.Message` | `exception.Message` |
+| `Exception.Stacktrace` | `exception.StackTrace` |
+| `Exception.InnerException` | `exception.InnerException.ToString()` |
+
+Each attribute is added only if its value exists (an exception that was never thrown has no stack trace) and the record doesn't already have an attribute with that name. The name check ignores case. If none of the three is added, the record isn't changed.
+
+The OTLP exporter also adds the standard `exception.type`, `exception.message` and `exception.stacktrace` attributes itself, when it sends the record. Its `exception.stacktrace` is the full `exception.ToString()`, which includes inner exceptions.
+
+### Finding events in Grafana
+
+In Grafana, go to **Explore** (or **Drilldown → Logs / Traces / Metrics**) and pick a data source. Loki turns the dots in attribute names into underscores, so `Exception.Message` appears as `Exception_Message` and `service.name` as `service_name`.
+
+**Loki (logs)**
+
+| To find | LogQL |
+| --- | --- |
+| All server logs | `{service_name="PilotMcpServer"}` |
+| Errors only | `{service_name="PilotMcpServer"} \| detected_level="error"` |
+| One tool call, across the MCP server and Pilot API | `{service_name=~".+"} \| CorrelationId="<guid>"` |
+| One tool call, MCP server only | `{service_name="PilotMcpServer"} \| CorrelationId="<guid>"` |
+| Entries for a tool | `{service_name="PilotMcpServer"} \| ToolName="get_category"` |
+| Tool failures | `{service_name="PilotMcpServer"} \|= "threw an unhandled exception"` |
+| Entries with an exception | `{service_name="PilotMcpServer"} \| Exception_Message!=""` |
+| Exceptions by text | `{service_name="PilotMcpServer"} \| Exception_Message=~"(?i).*unknown pilot api.*"` |
+| Outgoing Pilot API calls | `{service_name="PilotMcpServer"} \|= "Sending HTTP request"` |
+
+Other useful fields on each entry: `TraceId` / `SpanId` (link to Tempo), `scope_name` (logger category, e.g. `ModelContextProtocol.Server.McpServer`), `severity_text`, `exception_type`, `service_version`.
+
+**Tempo (traces)**
+
+| To find | TraceQL |
+| --- | --- |
+| All server traces | `{ resource.service.name = "PilotMcpServer" }` |
+| A tool call by correlation ID | `{ span.correlationId = "<guid>" }` |
+| A specific tool | `{ name = "tools/call get_category" }` |
+| Failed tool calls | `{ resource.service.name = "PilotMcpServer" && status = error }` |
+| Slow tool calls | `{ resource.service.name = "PilotMcpServer" && name =~ "tools/call.*" && duration > 1s }` |
+
+**Mimir (metrics)**
+
+| To find | PromQL |
+| --- | --- |
+| Tool calls per tool | `sum by (gen_ai_tool_name) (rate(mcp_server_operation_duration_seconds_count{job="PilotMcpServer", mcp_method_name="tools/call"}[5m]))` |
+| Tool errors | `sum by (gen_ai_tool_name) (rate(mcp_server_operation_duration_seconds_count{job="PilotMcpServer", error_type!=""}[5m]))` |
+| p95 tool duration | `histogram_quantile(0.95, sum by (le, gen_ai_tool_name) (rate(mcp_server_operation_duration_seconds_bucket{job="PilotMcpServer"}[5m])))` |
+| Pilot API call latency | `histogram_quantile(0.95, sum by (le, server_address) (rate(http_client_request_duration_seconds_bucket{job="PilotMcpServer"}[5m])))` |
 
 ## Validation and Integration Testing
 

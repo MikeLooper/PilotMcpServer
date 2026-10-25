@@ -1,4 +1,5 @@
 using System.Net;
+using PilotMcpServer.Models;
 using PilotMcpServer.Services;
 using PilotMcpServer.Tests.Testing.Doubles;
 
@@ -100,6 +101,40 @@ public class CorrelationIdDelegatingHandlerTests
 		var second = GetSingleCorrelationId(inner.LastRequest!);
 
 		Assert.That(first, Is.Not.EqualTo(second));
+	}
+
+	[Test]
+	public async Task CorrelationIdDelegatingHandler_DomainRequestDuringToolCall_UsesRequestSettingsCorrelationId_Test()
+	{
+		var settings = new RequestSettings();
+		var inner = new FakeHttpMessageHandler(HttpStatusCode.OK, "{}");
+		var accessor = new RequestSettingsAccessor { Current = settings };
+		var invoker = new HttpMessageInvoker(new CorrelationIdDelegatingHandler(accessor) { InnerHandler = inner });
+		using var firstRequest = new HttpRequestMessage(HttpMethod.Get, "http://localhost:11001/v1/categories/get-all");
+		using var secondRequest = new HttpRequestMessage(HttpMethod.Get, "http://localhost:11001/v1/categories/get/1");
+
+		await invoker.SendAsync(firstRequest, CancellationToken.None);
+		var first = GetSingleCorrelationId(inner.LastRequest!);
+		await invoker.SendAsync(secondRequest, CancellationToken.None);
+		var second = GetSingleCorrelationId(inner.LastRequest!);
+
+		Assert.That(first, Is.EqualTo(settings.CorrelationId));
+		Assert.That(second, Is.EqualTo(settings.CorrelationId));
+	}
+
+	[Test]
+	public async Task CorrelationIdDelegatingHandler_DomainRequestDuringToolCall_PreservesCallerSuppliedValue_Test()
+	{
+		var inner = new FakeHttpMessageHandler(HttpStatusCode.OK, "{}");
+		var accessor = new RequestSettingsAccessor { Current = new RequestSettings() };
+		var invoker = new HttpMessageInvoker(new CorrelationIdDelegatingHandler(accessor) { InnerHandler = inner });
+		const string existing = "7ea2c7f7-8b46-475d-86f8-7aaaa9e4a35b";
+		using var request = new HttpRequestMessage(HttpMethod.Get, "http://localhost:11001/v1/categories/get-all");
+		request.Headers.Add(HeaderName, existing);
+
+		await invoker.SendAsync(request, CancellationToken.None);
+
+		Assert.That(GetSingleCorrelationId(inner.LastRequest!), Is.EqualTo(existing));
 	}
 
 	[TestCase("http://localhost:11001/about")]
