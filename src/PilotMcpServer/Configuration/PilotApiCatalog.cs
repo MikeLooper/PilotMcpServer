@@ -11,10 +11,9 @@ namespace PilotMcpServer.Configuration;
 public static class PilotApiCatalog
 {
 	private const string ResourceName = "PilotMcpServer.appsettings.json";
-	private const string RunningInDockerVariableName = "RUNNING_IN_DOCKER";
 
 	public static readonly CatalogDocument Catalog = LoadCatalog();
-	private static readonly bool IsRunningInDocker = DetectDockerDeployment();
+	private static readonly bool IsRunningInDocker = DeploymentEnvironment.IsRunningInDocker();
 
 	public static readonly IReadOnlyList<PilotApiEndpoint> All = Catalog.Apis
 		.Select(api => new PilotApiEndpoint(
@@ -40,12 +39,6 @@ public static class PilotApiCatalog
 
 		endpoint = null!;
 		return false;
-	}
-
-	private static bool DetectDockerDeployment()
-	{
-		var value = Environment.GetEnvironmentVariable(RunningInDockerVariableName);
-		return bool.TryParse(value, out var isRunningInDocker) && isRunningInDocker;
 	}
 
 	private static CatalogDocument LoadCatalog()

@@ -11,11 +11,13 @@ namespace PilotMcpServer.Tools;
 public sealed class ProductsTools(IPilotHttpClient client) : ToolBase
 {
     [McpServerTool(Name = "get_all_products")]
-    [Description("Retrieves every product from the selected Pilot API.")]
+    [Description("Retrieves a page of products from the selected Pilot API. The API returns the first page (page 0) of 20 records when page and pageSize are omitted.")]
     public Task<IReadOnlyList<ProductDto>> GetAllProductsAsync(
+        [Description("Optional. Zero-based number of the page to start with. Defaults to 0 when omitted.")] int? page = null,
+        [Description("Optional. Number of records to return. Defaults to 20 when omitted.")] int? pageSize = null,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
-        => client.GetJsonListAsync<ProductDto>($"/v{this.ApiVersion}/products/get-all", apiName, cancellationToken);
+        => client.GetJsonListAsync<ProductDto>(WithPaging($"/v{this.ApiVersion}/products/get-all", page, pageSize), apiName, cancellationToken);
 
     [McpServerTool(Name = "get_product")]
     [Description("Retrieves a single product by its numeric ID. Returns null if no product with that ID exists.")]
@@ -27,16 +29,16 @@ public sealed class ProductsTools(IPilotHttpClient client) : ToolBase
 
     [McpServerTool(Name = "add_product")]
     [Description("Creates a new product. Returns the identifier assigned to the new record.")]
-    public Task<AddResponse> AddProductAsync(
+    public Task<AddResponseInt> AddProductAsync(
         [Description("The product to create. Required.")] ProductDto product,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
-        => client.PostJsonAsync<ProductDto, AddResponse>($"/v{this.ApiVersion}/products/add", product, apiName, cancellationToken);
+        => client.PostJsonAsync<ProductDto, AddResponseInt>($"/v{this.ApiVersion}/products/add", product, apiName, cancellationToken);
 
     [McpServerTool(Name = "update_product")]
-    [Description("Updates an existing product, identified by its productID.")]
+    [Description("Updates an existing product, identified by its productId.")]
     public Task UpdateProductAsync(
-        [Description("The product to update, including its existing productID. Required.")] ProductDto product,
+        [Description("The product to update, including its existing productId. Required.")] ProductDto product,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.PutJsonAsync($"/v{this.ApiVersion}/products/update", product, apiName, cancellationToken);

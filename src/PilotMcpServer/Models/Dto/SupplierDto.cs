@@ -9,11 +9,11 @@ namespace PilotMcpServer.Models.Dto;
 public sealed class SupplierDto
 {
 	/// <summary>
-	/// Gets or sets the unique identifier of the supplier.
+	/// Gets or sets the unique identifier of the supplier. Omit when adding a new supplier; the API assigns it.
 	/// </summary>
-	[JsonPropertyName("supplierID")]
-	[Description("Unique identifier of the supplier.")]
-	public required int SupplierId { get; init; }
+	[JsonPropertyName("supplierId")]
+	[Description("Unique identifier of the supplier. Omit when adding a new supplier; the API assigns it.")]
+	public int? SupplierId { get; init; }
 
 	/// <summary>
 	/// Gets or sets the name of the supplier's company.

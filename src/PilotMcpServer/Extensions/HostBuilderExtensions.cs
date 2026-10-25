@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using PilotMcpServer.Configuration;
 using PilotMcpServer.Contracts.Services;
@@ -45,17 +46,30 @@ public static class HostBuilderExtensions
 		return configuration.AddJsonStream(stream);
 	}
 
-	/// <summary>Registers the Pilot domain services: the security token provider, the Pilot HTTP client, and API selection state.</summary>
+	/// <summary>
+	/// Registers the Pilot domain services: the request settings accessor, the security token provider, the Pilot
+	/// HTTP client (with its correlation ID and security message handlers), and API selection state.
+	/// </summary>
 	public static IServiceCollection AddPilotDomainServices(this IServiceCollection services, IConfiguration configuration)
 	{
+		services.TryAddSingleton<IRequestSettingsAccessor, RequestSettingsAccessor>();
 		services.Configure<SecurityOptions>(configuration.GetSection(SecurityOptions.SectionName));
 		services.AddHttpClient<ISecurityTokenProvider, SecurityTokenProvider>();
+		services.AddTransient<CorrelationIdDelegatingHandler>();
 		services.AddTransient<SecurityDelegatingHandler>();
 		services
 			.AddHttpClient<IPilotHttpClient, PilotHttpClient>()
+			.AddHttpMessageHandler<CorrelationIdDelegatingHandler>()
 			.AddHttpMessageHandler<SecurityDelegatingHandler>();
 		services.AddSingleton<IPilotApiSelection, PilotApiSelectionState>();
 
 		return services;
 	}
+
+	/// <summary>
+	/// Gives each incoming MCP request (e.g. a tool call) its own <see cref="Models.RequestSettings"/>, so its
+	/// correlation ID is shared by the Pilot API requests, spans and log records the request produces.
+	/// </summary>
+	public static IMcpServerBuilder WithRequestSettings(this IMcpServerBuilder builder)
+		=> builder.WithMessageFilters(filters => filters.AddIncomingFilter(RequestSettingsMessageFilter.Create));
 }

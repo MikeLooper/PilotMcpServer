@@ -18,7 +18,7 @@ public class ShippersToolsTests
         client.Setup(c => c.GetJsonListAsync<ShipperDto>("/v1/shippers/get-all", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var result = await tools.GetAllShippersAsync(null, CancellationToken.None);
+        var result = await tools.GetAllShippersAsync(apiName: null, cancellationToken: CancellationToken.None);
 
         Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
@@ -45,8 +45,8 @@ public class ShippersToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new ShippersTools(client.Object);
         var shipper = new ShipperDto { ShipperId = 0, CompanyName = "New Shipper" };
-        var expected = new AddResponse { Id = 4 };
-        client.Setup(c => c.PostJsonAsync<ShipperDto, AddResponse>("/v1/shippers/add", shipper, null, It.IsAny<CancellationToken>()))
+        var expected = new AddResponseInt { Id = 4 };
+        client.Setup(c => c.PostJsonAsync<ShipperDto, AddResponseInt>("/v1/shippers/add", shipper, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.AddShipperAsync(shipper, null, CancellationToken.None);
@@ -79,6 +79,21 @@ public class ShippersToolsTests
 
         await tools.DeleteShipperAsync(1, null, CancellationToken.None);
 
+        client.VerifyAll();
+    }
+
+    [Test]
+    public async Task ShippersTools_GetAllShippersAsync_WithPaging_AppendsPageAndPageSizeQuery_Test()
+    {
+        var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
+        var tools = new ShippersTools(client.Object);
+        var expected = new List<ShipperDto>();
+        client.Setup(c => c.GetJsonListAsync<ShipperDto>("/v1/shippers/get-all?page=2&pageSize=50", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await tools.GetAllShippersAsync(2, 50, null, CancellationToken.None);
+
+        Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
     }
 }

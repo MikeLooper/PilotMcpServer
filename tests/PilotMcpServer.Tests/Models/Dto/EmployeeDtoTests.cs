@@ -11,7 +11,7 @@ public class EmployeeDtoTests
     {
         const string json = """
             {
-              "employeeID": 1,
+              "employeeId": 1,
               "firstName": "Nancy",
               "lastName": "Davolio",
               "title": "Sales Representative",
@@ -54,13 +54,13 @@ public class EmployeeDtoTests
     }
 
     [Test]
-    public void EmployeeDto_Serialize_UsesApiPropertyNamesNotCamelCase_Test()
+    public void EmployeeDto_Serialize_UsesOpenApiPropertyNames_Test()
     {
         var employee = new EmployeeDto { EmployeeId = 1, FirstName = "Nancy", LastName = "Davolio" };
 
         var json = JsonSerializer.Serialize(employee);
 
-        Assert.That(json, Does.Contain("\"employeeID\":1"));
+        Assert.That(json, Does.Contain("\"employeeId\":1"));
         Assert.That(json, Does.Contain("\"firstName\":\"Nancy\""));
         Assert.That(json, Does.Contain("\"lastName\":\"Davolio\""));
     }
@@ -97,5 +97,26 @@ public class EmployeeDtoTests
         Assert.That(employee.PhotoPath, Is.Null);
         Assert.That(employee.Notes, Is.Null);
         Assert.That(employee.ReportsTo, Is.Null);
+    }
+
+    [Test]
+    public void EmployeeDto_Deserialize_WithoutId_LeavesIdNull_Test()
+    {
+        const string json = """{"firstName":"New","lastName":"Hire"}""";
+
+        var dto = JsonSerializer.Deserialize<EmployeeDto>(json);
+
+        Assert.That(dto, Is.Not.Null);
+        Assert.That(dto!.EmployeeId, Is.Null);
+    }
+
+    [Test]
+    public void EmployeeDto_Serialize_WithoutId_WritesNullId_Test()
+    {
+        var dto = new EmployeeDto { FirstName = "New", LastName = "Hire" };
+
+        var json = JsonSerializer.Serialize(dto);
+
+        Assert.That(json, Does.Contain("\"employeeId\":null"));
     }
 }

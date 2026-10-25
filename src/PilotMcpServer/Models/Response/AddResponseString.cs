@@ -4,14 +4,14 @@ using System.Text.Json.Serialization;
 namespace PilotMcpServer.Models;
 
 /// <summary>
-/// Response returned by a Pilot API "add" endpoint after creating a record.
+/// Response returned by a Pilot API "add" endpoint whose record has a string identifier (e.g. Customers).
 /// </summary>
-public sealed class AddResponse
+public sealed class AddResponseString
 {
 	/// <summary>
 	/// Gets the identifier assigned to the newly created record.
 	/// </summary>
 	[JsonPropertyName("id")]
 	[Description("The identifier assigned to the newly created record.")]
-	public long Id { get; init; }
+	public string? Id { get; init; }
 }

@@ -9,11 +9,11 @@ namespace PilotMcpServer.Models.Dto;
 public sealed class EmployeeDto
 {
 	/// <summary>
-	/// Unique identifier of the employee.
+	/// Unique identifier of the employee. Omit when adding a new employee; the API assigns it.
 	/// </summary>
-	[JsonPropertyName("employeeID")]
-	[Description("Unique identifier of the employee.")]
-	public required int EmployeeId { get; init; }
+	[JsonPropertyName("employeeId")]
+	[Description("Unique identifier of the employee. Omit when adding a new employee; the API assigns it.")]
+	public int? EmployeeId { get; init; }
 
 	/// <summary>
 	/// Employee's first name.

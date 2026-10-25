@@ -16,10 +16,12 @@ PilotMcpServer/
 │   └── PilotMcpServer/          # the MCP server (console app)
 │       ├── Program.cs           # host/DI wiring, stdio transport, logging isolation
 │       ├── Configuration/       # the API catalog and endpoint summary catalog
-│       ├── Models/              # DTOs mirroring the Pilot API's OpenAPI schemas
-│       ├── Services/            # HTTP client + API-selection state
+│       ├── Models/              # DTOs mirroring the Pilot API's OpenAPI schemas, plus RequestSettings
+│       ├── OpenTelemetry/       # OTEL attribute names and span/log record processors
+│       ├── Services/            # HTTP client, API-selection state, request settings
 │       └── Tools/               # MCP tool classes, one per resource
 └── tests/
+    ├── PilotMcpServer.IntegrationTests/  # NUnit integration tests (OpenAPI compliance)
     ├── PilotMcpServer.Tests/    # NUnit + Moq unit tests, mirrors src/ layout
     └── vscode                   # VS Code manual validation and testing
 ```
@@ -53,8 +55,8 @@ git commit -m "Update PilotSharedSource submodule"
 ## Building, testing, and running
 
 ```bash
-dotnet build                 # builds the server and the test project
-dotnet test                  # runs the unit test suite (NUnit + Moq)
+dotnet build                 # builds the server and both test projects
+dotnet test                  # runs the unit tests and the OpenAPI compliance integration tests
 dotnet run --project src/PilotMcpServer   # runs the server (stdio transport — expects an MCP client on the other end)
 ```
 
@@ -148,6 +150,145 @@ Every data tool accepts an optional `apiName` argument (matching the **Descripti
 
 Every tool is `async`, takes a `CancellationToken`, and carries a `[Description]` written for the calling LLM. Request/response DTOs mirror the OpenAPI schemas field-for-field (including which fields are required vs. optional), so payload shape is validated the same way the underlying API validates it.
 
+## OpenTelemetry (OTEL)
+
+The server exports traces, metrics and logs over OTLP to the OpenTelemetry collector in the `otel-collector` Docker container. The collector sends them on to the local Grafana LGTM stack: traces to **Tempo**, metrics to **Mimir** and logs to **Loki**. To start the stack, run `C:\Working\Storage\Dev\GitHub\Docker\Otel\Docker-Otel-builder.bat`, then open Grafana at http://localhost:3000.
+
+Logs still go to stderr as before, and OTEL is added alongside them. No OTEL console exporter is registered, because it writes to stdout, which the stdio transport keeps for JSON-RPC.
+
+### Configuration
+
+The settings are in the `OpenTelemetry` section of the embedded `src/PilotMcpServer/appsettings.json`. Like the rest of that file, they are compiled in, so you rebuild to change them.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `Active` | `true` | `false` turns off all OTEL providers and exporters. |
+| `Host` | `localhost` | Collector host when running outside Docker. |
+| `ContainerName` | `otel-collector` | Collector host when `RUNNING_IN_DOCKER=true` (see [Docker hostname selection](#docker-hostname-selection-running_in_docker)). |
+| `Port` | `4317` | `4317` for OTLP gRPC, `4318` for OTLP HTTP. |
+| `Protocol` | `Grpc` | `Grpc` or `HttpProtobuf`. Change it together with `Port`. |
+| `ServiceName` | `PilotMcpServer` | The `service.name` resource attribute. In Loki this is the `service_name` label, and in Mimir it is the `job` label. |
+
+If the collector isn't running, the server works normally and the telemetry is dropped.
+
+### What is recorded
+
+- **Traces:** one span per MCP request from the ModelContextProtocol SDK (e.g. `tools/call get_category`), with a child span for each outgoing HTTP call: the Pilot API call and the Keycloak token request. The W3C `traceparent` header goes out with each Pilot API call. When the Pilot API is instrumented as well, as `PilotApiDotNet` is, its spans join the same trace.
+- **Metrics:** MCP operation and session durations (`mcp_server_operation_duration_seconds`, `mcp_server_session_duration_seconds`) and the .NET HttpClient metrics (`http_client_request_duration_seconds`, `http_client_active_requests`, etc.).
+- **Logs:** every `ILogger` entry, with the formatted message and scopes. This includes the SDK's "tool completed" and "tool threw an unhandled exception" entries and the HttpClient request/response entries.
+
+### Correlation ID
+
+Each incoming MCP request (each tool call) gets its own `RequestSettings` with a new `CorrelationId` GUID. It is set up by an incoming message filter (`RequestSettingsMessageFilter`) and is available for the whole request through `IRequestSettingsAccessor`. The same value is:
+
+- sent to the Pilot API as the `X-Correlation-Id` header on every request the tool call makes. Before this change, each HTTP request got its own random GUID.
+- added to `Activity.Tags` as **`correlationId`** on the MCP request span and on every span started during the request.
+- added to `LogRecord.Attributes` as **`CorrelationId`** on every log entry written during the request.
+
+Because the Pilot API records the incoming `X-Correlation-Id` too, one ID finds a tool call's log entries in both the MCP server and the API.
+
+### Exception attributes
+
+When a log entry carries an exception, `LogExceptionAttributesProcessor` adds the following attributes:
+
+| Attribute | Value |
+| --- | --- |
+| `Exception.Message` | `exception.Message` |
+| `Exception.Stacktrace` | `exception.StackTrace` |
+| `Exception.InnerException` | `exception.InnerException.ToString()` |
+
+Each attribute is added only if its value exists (an exception that was never thrown has no stack trace) and the record doesn't already have an attribute with that name. The name check ignores case. If none of the three is added, the record isn't changed.
+
+The OTLP exporter also adds the standard `exception.type`, `exception.message` and `exception.stacktrace` attributes itself, when it sends the record. Its `exception.stacktrace` is the full `exception.ToString()`, which includes inner exceptions.
+
+### Finding events in Grafana
+
+In Grafana, go to **Explore** (or **Drilldown → Logs / Traces / Metrics**) and pick a data source. Loki turns the dots in attribute names into underscores, so `Exception.Message` appears as `Exception_Message` and `service.name` as `service_name`.
+
+**Loki (logs)**
+
+| To find | LogQL |
+| --- | --- |
+| All server logs | `{service_name="PilotMcpServer"}` |
+| Errors only | `{service_name="PilotMcpServer"} \| detected_level="error"` |
+| One tool call, across the MCP server and Pilot API | `{service_name=~".+"} \| CorrelationId="<guid>"` |
+| One tool call, MCP server only | `{service_name="PilotMcpServer"} \| CorrelationId="<guid>"` |
+| Entries for a tool | `{service_name="PilotMcpServer"} \| ToolName="get_category"` |
+| Tool failures | `{service_name="PilotMcpServer"} \|= "threw an unhandled exception"` |
+| Entries with an exception | `{service_name="PilotMcpServer"} \| Exception_Message!=""` |
+| Exceptions by text | `{service_name="PilotMcpServer"} \| Exception_Message=~"(?i).*unknown pilot api.*"` |
+| Outgoing Pilot API calls | `{service_name="PilotMcpServer"} \|= "Sending HTTP request"` |
+
+Other useful fields on each entry: `TraceId` / `SpanId` (link to Tempo), `scope_name` (logger category, e.g. `ModelContextProtocol.Server.McpServer`), `severity_text`, `exception_type`, `service_version`.
+
+**Tempo (traces)**
+
+| To find | TraceQL |
+| --- | --- |
+| All server traces | `{ resource.service.name = "PilotMcpServer" }` |
+| A tool call by correlation ID | `{ span.correlationId = "<guid>" }` |
+| A specific tool | `{ name = "tools/call get_category" }` |
+| Failed tool calls | `{ resource.service.name = "PilotMcpServer" && status = error }` |
+| Slow tool calls | `{ resource.service.name = "PilotMcpServer" && name =~ "tools/call.*" && duration > 1s }` |
+
+**Mimir (metrics)**
+
+| To find | PromQL |
+| --- | --- |
+| Tool calls per tool | `sum by (gen_ai_tool_name) (rate(mcp_server_operation_duration_seconds_count{job="PilotMcpServer", mcp_method_name="tools/call"}[5m]))` |
+| Tool errors | `sum by (gen_ai_tool_name) (rate(mcp_server_operation_duration_seconds_count{job="PilotMcpServer", error_type!=""}[5m]))` |
+| p95 tool duration | `histogram_quantile(0.95, sum by (le, gen_ai_tool_name) (rate(mcp_server_operation_duration_seconds_bucket{job="PilotMcpServer"}[5m])))` |
+| Pilot API call latency | `histogram_quantile(0.95, sum by (le, server_address) (rate(http_client_request_duration_seconds_bucket{job="PilotMcpServer"}[5m])))` |
+
 ## Validation and Integration Testing
 
-To validate that the MCP server is working correctly with the APIs, open VS Code in the \tests\vscode directory and follow the directions in the README found in that directory.
+### OpenAPI compliance tests
+
+`tests/PilotMcpServer.IntegrationTests` checks that the Pilot API contract this server implements matches the shared OpenAPI specification, `shared/PilotSharedSource/OpenAPI/PilotApi_v1.yaml`. It catches drift in either direction: a spec change that the client hasn't picked up, or a client change that no longer matches the spec. The tests need no running Pilot API, network access or Docker.
+
+**Running them**
+
+```bash
+git submodule update --init --recursive    # the spec comes from the submodule
+dotnet test tests/PilotMcpServer.IntegrationTests
+```
+
+They also run as part of a plain `dotnet test` and in the GitHub Actions build, which checks out submodules. If the spec file is missing, every test fails with a message telling you to initialize the submodule.
+
+**How the comparison works**
+
+This server is a *client* of the Pilot API and doesn't publish its own OpenAPI document, so the tests derive the implemented contract from the code:
+
+| Part of the contract | Where it comes from |
+| --- | --- |
+| Operations (method, path, tag, summary) | `PilotEndpointCatalog` |
+| Path and query parameters, request body, response type | The signature of the matching `[McpServerTool]` method (e.g. Categories `GetAll` → `CategoriesTools.GetAll*`) |
+| Request and response schemas | The DTO types, read by reflection with the client's own `PilotHttpClient` JSON serializer options |
+| Headers (`X-Correlation-Id`) and bearer authentication | A request for each path passed through the real correlation ID and security delegating handlers, in memory, into a recording stub |
+
+The derived contract is then compared with the spec, which is read with Microsoft.OpenApi. Comparisons are **consumer-compatible**, so whether a difference matters depends on which way the data flows:
+
+- **Requests** (data the client sends) may be stricter than the spec but never looser. For example, sending a non-null value where the spec allows null is fine; being able to send null where the spec forbids it is an error.
+- **Responses** (data the client reads) must accept everything the spec allows the server to return. A response property the client simply ignores is a warning, not an error.
+
+**Severity levels**
+
+| Level | Effect | What it covers |
+| --- | --- | --- |
+| Error | Fails the test | A spec operation that isn't implemented; a required parameter or request body that is missing or can be omitted; a missing 2xx response; a request schema or property that is missing; a base type mismatch; any security mismatch; incompatible media type, nullability, required list, format, pattern, default, enum or oneOf/anyOf/allOf |
+| Warn | Logged only | Extra operations, parameters, responses or properties; missing optional parameters; response properties, schemas or bodies the client doesn't read; document metadata (info, servers, tags, operationIds) |
+| Info | Logged only | Descriptions and examples; alternate types such as `[integer, string]` vs `integer`; component names (e.g. `CategoriesDto` vs `CategoryDto`); differences that are compatible in the direction the data flows |
+
+**Reading the results**
+
+- There is one test per spec operation (e.g. `GET /v1/categories/get-all`), one per spec component (e.g. `#/components/schemas/CategoriesDto`) and one for document-level items. A failing test lists its errors in the assertion message.
+- Each test writes its Warn and Info findings to the test output.
+- The full report, covering every finding at every severity, is written to `OpenApiComplianceReport.md` in the test output directory (e.g. `tests/PilotMcpServer.IntegrationTests/bin/Debug/net10.0/`). It is also attached to the test run.
+
+**When a test fails**
+
+Decide which side is correct. If the spec changed, update the DTOs, tools or `PilotEndpointCatalog` to match it. If the client is right, change the spec in the `PilotSharedSource` repository and then bump the submodule (see [Shared source submodule](#shared-source-submodule)).
+
+### Manual validation in VS Code
+
+To check that the MCP server works correctly against the running APIs, open VS Code in the `tests/vscode` directory and follow the directions in the README found there.

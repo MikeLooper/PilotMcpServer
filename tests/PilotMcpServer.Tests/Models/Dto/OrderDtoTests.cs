@@ -11,9 +11,9 @@ public class OrderDtoTests
     {
         const string json = """
             {
-              "orderID": 10248,
-              "customerID": "VINET",
-              "employeeID": 5,
+              "orderId": 10248,
+              "customerId": "VINET",
+              "employeeId": 5,
               "orderDate": "1996-07-04T00:00:00",
               "requiredDate": "1996-08-01T00:00:00",
               "shippedDate": "1996-07-16T00:00:00",
@@ -50,7 +50,7 @@ public class OrderDtoTests
     [Test]
     public void OrderDto_Deserialize_NullableFieldsAsNull_LeavesPropertiesNull_Test()
     {
-        const string json = """{"orderID":10249,"shippedDate":null}""";
+        const string json = """{"orderId":10249,"shippedDate":null}""";
 
         var order = JsonSerializer.Deserialize<OrderDto>(json);
 
@@ -62,13 +62,34 @@ public class OrderDtoTests
     }
 
     [Test]
-    public void OrderDto_Serialize_UsesApiPropertyNamesNotCamelCase_Test()
+    public void OrderDto_Serialize_UsesOpenApiPropertyNames_Test()
     {
         var order = new OrderDto { OrderId = 10248, ShipCity = "Reims" };
 
         var json = JsonSerializer.Serialize(order);
 
-        Assert.That(json, Does.Contain("\"orderID\":10248"));
+        Assert.That(json, Does.Contain("\"orderId\":10248"));
         Assert.That(json, Does.Contain("\"shipCity\":\"Reims\""));
+    }
+
+    [Test]
+    public void OrderDto_Deserialize_WithoutId_LeavesIdNull_Test()
+    {
+        const string json = """{"shipCity":"Reims"}""";
+
+        var dto = JsonSerializer.Deserialize<OrderDto>(json);
+
+        Assert.That(dto, Is.Not.Null);
+        Assert.That(dto!.OrderId, Is.Null);
+    }
+
+    [Test]
+    public void OrderDto_Serialize_WithoutId_WritesNullId_Test()
+    {
+        var dto = new OrderDto { ShipCity = "Reims" };
+
+        var json = JsonSerializer.Serialize(dto);
+
+        Assert.That(json, Does.Contain("\"orderId\":null"));
     }
 }

@@ -18,7 +18,7 @@ public class ProductsToolsTests
         client.Setup(c => c.GetJsonListAsync<ProductDto>("/v1/products/get-all", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var result = await tools.GetAllProductsAsync(null, CancellationToken.None);
+        var result = await tools.GetAllProductsAsync(apiName: null, cancellationToken: CancellationToken.None);
 
         Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
@@ -45,8 +45,8 @@ public class ProductsToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new ProductsTools(client.Object);
         var product = new ProductDto { ProductId = 0, ProductName = "New Product" };
-        var expected = new AddResponse { Id = 78 };
-        client.Setup(c => c.PostJsonAsync<ProductDto, AddResponse>("/v1/products/add", product, null, It.IsAny<CancellationToken>()))
+        var expected = new AddResponseInt { Id = 78 };
+        client.Setup(c => c.PostJsonAsync<ProductDto, AddResponseInt>("/v1/products/add", product, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.AddProductAsync(product, null, CancellationToken.None);
@@ -79,6 +79,21 @@ public class ProductsToolsTests
 
         await tools.DeleteProductAsync(1, null, CancellationToken.None);
 
+        client.VerifyAll();
+    }
+
+    [Test]
+    public async Task ProductsTools_GetAllProductsAsync_WithPaging_AppendsPageAndPageSizeQuery_Test()
+    {
+        var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
+        var tools = new ProductsTools(client.Object);
+        var expected = new List<ProductDto>();
+        client.Setup(c => c.GetJsonListAsync<ProductDto>("/v1/products/get-all?page=2&pageSize=50", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await tools.GetAllProductsAsync(2, 50, null, CancellationToken.None);
+
+        Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
     }
 }

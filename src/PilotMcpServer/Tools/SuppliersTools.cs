@@ -11,11 +11,13 @@ namespace PilotMcpServer.Tools;
 public sealed class SuppliersTools(IPilotHttpClient client) : ToolBase
 {
     [McpServerTool(Name = "get_all_suppliers")]
-    [Description("Retrieves every supplier from the selected Pilot API.")]
+    [Description("Retrieves a page of suppliers from the selected Pilot API. The API returns the first page (page 0) of 20 records when page and pageSize are omitted.")]
     public Task<IReadOnlyList<SupplierDto>> GetAllSuppliersAsync(
+        [Description("Optional. Zero-based number of the page to start with. Defaults to 0 when omitted.")] int? page = null,
+        [Description("Optional. Number of records to return. Defaults to 20 when omitted.")] int? pageSize = null,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
-        => client.GetJsonListAsync<SupplierDto>($"/v{this.ApiVersion}/suppliers/get-all", apiName, cancellationToken);
+        => client.GetJsonListAsync<SupplierDto>(WithPaging($"/v{this.ApiVersion}/suppliers/get-all", page, pageSize), apiName, cancellationToken);
 
     [McpServerTool(Name = "get_supplier")]
     [Description("Retrieves a single supplier by its numeric ID. Returns null if no supplier with that ID exists.")]
@@ -27,16 +29,16 @@ public sealed class SuppliersTools(IPilotHttpClient client) : ToolBase
 
     [McpServerTool(Name = "add_supplier")]
     [Description("Creates a new supplier. Returns the identifier assigned to the new record.")]
-    public Task<AddResponse> AddSupplierAsync(
+    public Task<AddResponseInt> AddSupplierAsync(
         [Description("The supplier to create. Required.")] SupplierDto supplier,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
-        => client.PostJsonAsync<SupplierDto, AddResponse>($"/v{this.ApiVersion}/suppliers/add", supplier, apiName, cancellationToken);
+        => client.PostJsonAsync<SupplierDto, AddResponseInt>($"/v{this.ApiVersion}/suppliers/add", supplier, apiName, cancellationToken);
 
     [McpServerTool(Name = "update_supplier")]
-    [Description("Updates an existing supplier, identified by its supplierID.")]
+    [Description("Updates an existing supplier, identified by its supplierId.")]
     public Task UpdateSupplierAsync(
-        [Description("The supplier to update, including its existing supplierID. Required.")] SupplierDto supplier,
+        [Description("The supplier to update, including its existing supplierId. Required.")] SupplierDto supplier,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.PutJsonAsync($"/v{this.ApiVersion}/suppliers/update", supplier, apiName, cancellationToken);

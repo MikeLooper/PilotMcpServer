@@ -66,6 +66,23 @@ public class HostBuilderExtensionsTests
 	}
 
 	[Test]
+	public async Task HostBuilderExtensions_AddPilotDomainServices_PilotHttpClientSendsGuidCorrelationIdOnDomainCalls_Test()
+	{
+		var services = new ServiceCollection();
+		var configuration = new ConfigurationBuilder().Build();
+		var primary = new FakeHttpMessageHandler(System.Net.HttpStatusCode.NoContent, "");
+
+		services.AddPilotDomainServices(configuration);
+		services.AddHttpClient<IPilotHttpClient, PilotHttpClient>().ConfigurePrimaryHttpMessageHandler(() => primary);
+		using var provider = services.BuildServiceProvider();
+
+		await provider.GetRequiredService<IPilotHttpClient>().DeleteAsync("/v1/categories/delete/1", null, CancellationToken.None);
+
+		Assert.That(primary.LastRequest!.Headers.TryGetValues(CorrelationIdDelegatingHandler.HeaderName, out var values), Is.True);
+		Assert.That(Guid.TryParse(values!.Single(), out _), Is.True);
+	}
+
+	[Test]
 	public void HostBuilderExtensions_AddPilotDomainServices_RegistersPilotApiSelectionAsSingleton_Test()
 	{
 		var services = new ServiceCollection();

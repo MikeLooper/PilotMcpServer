@@ -9,7 +9,7 @@ public class ShipperDtoTests
     [Test]
     public void ShipperDto_Deserialize_MapsAllPropertiesFromApiJson_Test()
     {
-        const string json = """{"shipperID":1,"companyName":"Speedy Express","phone":"(503) 555-9831"}""";
+        const string json = """{"shipperId":1,"companyName":"Speedy Express","phone":"(503) 555-9831"}""";
 
         var shipper = JsonSerializer.Deserialize<ShipperDto>(json);
 
@@ -20,13 +20,13 @@ public class ShipperDtoTests
     }
 
     [Test]
-    public void ShipperDto_Serialize_UsesApiPropertyNamesNotCamelCase_Test()
+    public void ShipperDto_Serialize_UsesOpenApiPropertyNames_Test()
     {
         var shipper = new ShipperDto { ShipperId = 1, CompanyName = "Speedy Express" };
 
         var json = JsonSerializer.Serialize(shipper);
 
-        Assert.That(json, Does.Contain("\"shipperID\":1"));
+        Assert.That(json, Does.Contain("\"shipperId\":1"));
         Assert.That(json, Does.Contain("\"companyName\":\"Speedy Express\""));
     }
 
@@ -36,5 +36,34 @@ public class ShipperDtoTests
         var shipper = new ShipperDto { ShipperId = 1, CompanyName = "Speedy Express" };
 
         Assert.That(shipper.Phone, Is.Null);
+    }
+
+    [Test]
+    public void ShipperDto_Deserialize_WithoutId_LeavesIdNull_Test()
+    {
+        const string json = """{"companyName":"Speedy Express"}""";
+
+        var dto = JsonSerializer.Deserialize<ShipperDto>(json);
+
+        Assert.That(dto, Is.Not.Null);
+        Assert.That(dto!.ShipperId, Is.Null);
+    }
+
+    [Test]
+    public void ShipperDto_Serialize_WithoutId_WritesNullId_Test()
+    {
+        var dto = new ShipperDto { CompanyName = "Speedy Express" };
+
+        var json = JsonSerializer.Serialize(dto);
+
+        Assert.That(json, Does.Contain("\"shipperId\":null"));
+    }
+
+    [Test]
+    public void ShipperDto_CompanyName_Unset_IsNull_Test()
+    {
+        var shipper = new ShipperDto { ShipperId = 1 };
+
+        Assert.That(shipper.CompanyName, Is.Null);
     }
 }

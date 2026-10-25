@@ -18,7 +18,7 @@ public class CustomersToolsTests
         client.Setup(c => c.GetJsonListAsync<CustomerDto>("/v1/customers/get-all", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var result = await tools.GetAllCustomersAsync(null, CancellationToken.None);
+        var result = await tools.GetAllCustomersAsync(apiName: null, cancellationToken: CancellationToken.None);
 
         Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
@@ -45,8 +45,8 @@ public class CustomersToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new CustomersTools(client.Object);
         var customer = new CustomerDto { CustomerId = "NEWCO", CompanyName = "New Co" };
-        var expected = new AddResponse { Id = 1 };
-        client.Setup(c => c.PostJsonAsync<CustomerDto, AddResponse>("/v1/customers/add", customer, null, It.IsAny<CancellationToken>()))
+        var expected = new AddResponseString { Id = "NEWCO" };
+        client.Setup(c => c.PostJsonAsync<CustomerDto, AddResponseString>("/v1/customers/add", customer, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.AddCustomerAsync(customer, null, CancellationToken.None);
@@ -79,6 +79,21 @@ public class CustomersToolsTests
 
         await tools.DeleteCustomerAsync("ALFKI", null, CancellationToken.None);
 
+        client.VerifyAll();
+    }
+
+    [Test]
+    public async Task CustomersTools_GetAllCustomersAsync_WithPaging_AppendsPageAndPageSizeQuery_Test()
+    {
+        var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
+        var tools = new CustomersTools(client.Object);
+        var expected = new List<CustomerDto>();
+        client.Setup(c => c.GetJsonListAsync<CustomerDto>("/v1/customers/get-all?page=2&pageSize=50", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await tools.GetAllCustomersAsync(2, 50, null, CancellationToken.None);
+
+        Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
     }
 }

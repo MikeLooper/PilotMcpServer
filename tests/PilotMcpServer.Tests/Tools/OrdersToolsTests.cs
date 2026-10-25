@@ -18,7 +18,7 @@ public class OrdersToolsTests
         client.Setup(c => c.GetJsonListAsync<OrderDto>("/v1/orders/get-all", null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var result = await tools.GetAllOrdersAsync(null, CancellationToken.None);
+        var result = await tools.GetAllOrdersAsync(apiName: null, cancellationToken: CancellationToken.None);
 
         Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
@@ -45,8 +45,8 @@ public class OrdersToolsTests
         var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
         var tools = new OrdersTools(client.Object);
         var order = new OrderDto { OrderId = 0 };
-        var expected = new AddResponse { Id = 11077 };
-        client.Setup(c => c.PostJsonAsync<OrderDto, AddResponse>("/v1/orders/add", order, null, It.IsAny<CancellationToken>()))
+        var expected = new AddResponseInt { Id = 11077 };
+        client.Setup(c => c.PostJsonAsync<OrderDto, AddResponseInt>("/v1/orders/add", order, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
         var result = await tools.AddOrderAsync(order, null, CancellationToken.None);
@@ -79,6 +79,21 @@ public class OrdersToolsTests
 
         await tools.DeleteOrderAsync(10248, null, CancellationToken.None);
 
+        client.VerifyAll();
+    }
+
+    [Test]
+    public async Task OrdersTools_GetAllOrdersAsync_WithPaging_AppendsPageAndPageSizeQuery_Test()
+    {
+        var client = new Mock<IPilotHttpClient>(MockBehavior.Strict);
+        var tools = new OrdersTools(client.Object);
+        var expected = new List<OrderDto>();
+        client.Setup(c => c.GetJsonListAsync<OrderDto>("/v1/orders/get-all?page=2&pageSize=50", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expected);
+
+        var result = await tools.GetAllOrdersAsync(2, 50, null, CancellationToken.None);
+
+        Assert.That(result, Is.SameAs(expected));
         client.VerifyAll();
     }
 }

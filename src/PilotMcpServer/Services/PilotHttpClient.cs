@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using PilotMcpServer.Configuration;
 using PilotMcpServer.Contracts.Services;
 using PilotMcpServer.Models;
@@ -17,6 +18,8 @@ public sealed class PilotHttpClient(HttpClient httpClient, IPilotApiSelection se
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true,
+        // The OpenAPI contract types numeric fields as "integer | string" / "number | string".
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
     };
 
     public PilotApiEndpoint ResolveEndpoint(string? apiName)
