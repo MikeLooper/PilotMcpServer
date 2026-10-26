@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace PilotMcpServer.Models.Dto;
@@ -13,6 +14,7 @@ public sealed class ShipperDto
 	/// </summary>
 	[JsonPropertyName("shipperId")]
 	[Description("Unique identifier of the shipper. Omit when adding a new shipper; the API assigns it.")]
+	[Range(1, int.MaxValue)]
 	public int? ShipperId { get; init; }
 
 	/// <summary>
@@ -20,12 +22,14 @@ public sealed class ShipperDto
 	/// </summary>
 	[JsonPropertyName("companyName")]
 	[Description("Name of the shipping company.")]
-	public string? CompanyName { get; init; }
+	[StringLength(40, MinimumLength = 1)]
+	public required string CompanyName { get; init; }
 	
 	/// <summary>
 	/// Phone number for the shipping company.
 	/// </summary>
 	[JsonPropertyName("phone")]
 	[Description("Phone number for the shipping company.")]
+	[StringLength(24)]
 	public string? Phone { get; init; }
 }

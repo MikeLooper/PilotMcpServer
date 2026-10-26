@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace PilotMcpServer.Models.Dto;
@@ -13,6 +14,7 @@ public sealed class CustomerDto
 	/// </summary>
 	[JsonPropertyName("customerId")]
 	[Description("Unique identifier of the customer (a 5-character code).")]
+	[StringLength(5, MinimumLength = 5)]
 	public required string CustomerId { get; init; }
 	
 	/// <summary>
@@ -20,6 +22,7 @@ public sealed class CustomerDto
 	/// </summary>
 	[JsonPropertyName("companyName")]
 	[Description("Name of the customer's company.")]
+	[StringLength(40, MinimumLength = 1)]
 	public required string CompanyName { get; init; }
 	
 	/// <summary>
@@ -27,6 +30,7 @@ public sealed class CustomerDto
 	/// </summary>
 	[JsonPropertyName("contactName")]
 	[Description("Name of the primary contact at the company.")]
+	[StringLength(30)]
 	public string? ContactName { get; init; }
 	
 	/// <summary>
@@ -34,6 +38,7 @@ public sealed class CustomerDto
 	/// </summary>
 	[JsonPropertyName("contactTitle")]
 	[Description("Job title of the primary contact.")]
+	[StringLength(30)]
 	public string? ContactTitle { get; init; }
 	
 	/// <summary>
@@ -41,6 +46,7 @@ public sealed class CustomerDto
 	/// </summary>
 	[JsonPropertyName("address")]
 	[Description("Street address of the customer.")]
+	[StringLength(60)]
 	public string? Address { get; init; }
 	
 	/// <summary>
@@ -48,6 +54,7 @@ public sealed class CustomerDto
 	/// </summary>
 	[JsonPropertyName("city")]
 	[Description("City of the customer's address.")]
+	[StringLength(15)]
 	public string? City { get; init; }
 	
 	/// <summary>
@@ -55,6 +62,7 @@ public sealed class CustomerDto
 	/// </summary>
 	[JsonPropertyName("region")]
 	[Description("State or region of the customer's address.")]
+	[StringLength(15)]
 	public string? Region { get; init; }
 	
 	/// <summary>
@@ -62,6 +70,7 @@ public sealed class CustomerDto
 	/// </summary>
 	[JsonPropertyName("postalCode")]
 	[Description("Postal or ZIP code of the customer's address.")]
+	[StringLength(10)]
 	public string? PostalCode { get; init; }
 	
 	/// <summary>
@@ -69,6 +78,7 @@ public sealed class CustomerDto
 	/// </summary>
 	[JsonPropertyName("country")]
 	[Description("Country of the customer's address.")]
+	[StringLength(15)]
 	public string? Country { get; init; }
 	
 	/// <summary>
@@ -76,6 +86,7 @@ public sealed class CustomerDto
 	/// </summary>
 	[JsonPropertyName("phone")]
 	[Description("Primary phone number for the customer.")]
+	[StringLength(24)]
 	public string? Phone { get; init; }
 	
 	/// <summary>
@@ -83,5 +94,6 @@ public sealed class CustomerDto
 	/// </summary>
 	[JsonPropertyName("fax")]
 	[Description("Fax number for the customer.")]
+	[StringLength(24)]
 	public string? Fax { get; init; }
 }

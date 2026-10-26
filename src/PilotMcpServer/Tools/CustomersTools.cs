@@ -4,6 +4,7 @@ using PilotMcpServer.Models.Dto;
 using PilotMcpServer.Services;
 using PilotMcpServer.Tools.Base;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace PilotMcpServer.Tools;
 
@@ -22,7 +23,7 @@ public sealed class CustomersTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "get_customer")]
     [Description("Retrieves a single customer by its 5-character customer code. Returns null if no customer with that code exists.")]
     public Task<CustomerDto?> GetCustomerAsync(
-        [Description("5-character customer code of the customer to retrieve. Required.")] string customerId,
+        [Description("5-character customer code of the customer to retrieve. Required.")] [StringLength(5, MinimumLength = 5)] string customerId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.GetJsonAsync<CustomerDto>($"/v{this.ApiVersion}/customers/get/{Uri.EscapeDataString(customerId)}", apiName, cancellationToken);
@@ -46,7 +47,7 @@ public sealed class CustomersTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "delete_customer")]
     [Description("Deletes a customer by its 5-character customer code.")]
     public Task DeleteCustomerAsync(
-        [Description("5-character customer code of the customer to delete. Required.")] string customerId,
+        [Description("5-character customer code of the customer to delete. Required.")] [StringLength(5, MinimumLength = 5)] string customerId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.DeleteAsync($"/v{this.ApiVersion}/customers/delete/{Uri.EscapeDataString(customerId)}", apiName, cancellationToken);

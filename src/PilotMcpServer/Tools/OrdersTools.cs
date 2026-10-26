@@ -4,6 +4,7 @@ using PilotMcpServer.Models.Dto;
 using PilotMcpServer.Services;
 using PilotMcpServer.Tools.Base;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace PilotMcpServer.Tools;
 
@@ -22,7 +23,7 @@ public sealed class OrdersTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "get_order")]
     [Description("Retrieves a single order by its numeric ID. Returns null if no order with that ID exists.")]
     public Task<OrderDto?> GetOrderAsync(
-        [Description("Numeric ID of the order to retrieve. Required.")] int orderId,
+        [Description("Numeric ID of the order to retrieve. Required.")] [Range(1, int.MaxValue)] int orderId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.GetJsonAsync<OrderDto>($"/v{this.ApiVersion}/orders/get/{orderId}", apiName, cancellationToken);
@@ -46,7 +47,7 @@ public sealed class OrdersTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "delete_order")]
     [Description("Deletes an order by its numeric ID.")]
     public Task DeleteOrderAsync(
-        [Description("Numeric ID of the order to delete. Required.")] int orderId,
+        [Description("Numeric ID of the order to delete. Required.")] [Range(1, int.MaxValue)] int orderId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.DeleteAsync($"/v{this.ApiVersion}/orders/delete/{orderId}", apiName, cancellationToken);

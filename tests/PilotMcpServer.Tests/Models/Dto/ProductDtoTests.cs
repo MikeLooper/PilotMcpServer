@@ -60,9 +60,9 @@ public class ProductDtoTests
         Assert.That(product.CategoryId, Is.Null);
         Assert.That(product.QuantityPerUnit, Is.Null);
         Assert.That(product.UnitPrice, Is.Null);
-        Assert.That(product.UnitsInStock, Is.EqualTo((short)0));
-        Assert.That(product.UnitsOnOrder, Is.EqualTo((short)0));
-        Assert.That(product.ReorderLevel, Is.EqualTo((short)0));
+        Assert.That(product.UnitsInStock, Is.Null);
+        Assert.That(product.UnitsOnOrder, Is.Null);
+        Assert.That(product.ReorderLevel, Is.Null);
         Assert.That(product.Discontinued, Is.False);
     }
 
@@ -85,5 +85,30 @@ public class ProductDtoTests
         var json = JsonSerializer.Serialize(dto);
 
         Assert.That(json, Does.Contain("\"productId\":null"));
+    }
+
+    [Test]
+    public void ProductDto_Serialize_UnsetStockLevels_OmitsDefaultedValues_Test()
+    {
+        var product = new ProductDto { ProductName = "Chai" };
+
+        var json = JsonSerializer.Serialize(product);
+
+        Assert.That(json, Does.Not.Contain("\"unitsInStock\""));
+        Assert.That(json, Does.Not.Contain("\"unitsOnOrder\""));
+        Assert.That(json, Does.Not.Contain("\"reorderLevel\""));
+    }
+
+    [Test]
+    public void ProductDto_Deserialize_NullStockLevels_MapsToNull_Test()
+    {
+        const string json = """{"productId":1,"productName":"Chai","unitsInStock":null,"unitsOnOrder":null,"reorderLevel":null}""";
+
+        var product = JsonSerializer.Deserialize<ProductDto>(json);
+
+        Assert.That(product, Is.Not.Null);
+        Assert.That(product!.UnitsInStock, Is.Null);
+        Assert.That(product.UnitsOnOrder, Is.Null);
+        Assert.That(product.ReorderLevel, Is.Null);
     }
 }

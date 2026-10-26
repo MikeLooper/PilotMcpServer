@@ -4,6 +4,7 @@ using PilotMcpServer.Models.Dto;
 using PilotMcpServer.Services;
 using PilotMcpServer.Tools.Base;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace PilotMcpServer.Tools;
 
@@ -22,7 +23,7 @@ public sealed class EmployeesTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "get_employee")]
     [Description("Retrieves a single employee by its numeric ID. Returns null if no employee with that ID exists.")]
     public Task<EmployeeDto?> GetEmployeeAsync(
-        [Description("Numeric ID of the employee to retrieve. Required.")] int employeeId,
+        [Description("Numeric ID of the employee to retrieve. Required.")] [Range(1, int.MaxValue)] int employeeId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.GetJsonAsync<EmployeeDto>($"/v{this.ApiVersion}/employees/get/{employeeId}", apiName, cancellationToken);
@@ -46,7 +47,7 @@ public sealed class EmployeesTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "delete_employee")]
     [Description("Deletes an employee by its numeric ID.")]
     public Task DeleteEmployeeAsync(
-        [Description("Numeric ID of the employee to delete. Required.")] int employeeId,
+        [Description("Numeric ID of the employee to delete. Required.")] [Range(1, int.MaxValue)] int employeeId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.DeleteAsync($"/v{this.ApiVersion}/employees/delete/{employeeId}", apiName, cancellationToken);
