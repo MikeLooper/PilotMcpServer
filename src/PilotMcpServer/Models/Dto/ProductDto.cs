@@ -63,6 +63,7 @@ public sealed class ProductDto
 	[JsonPropertyName("unitsInStock")]
 	[Description("Number of units currently in stock. Defaults to 0 when omitted.")]
 	[Range(0, short.MaxValue)]
+	[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 	public short? UnitsInStock { get; init; }
 
 	/// <summary>
@@ -71,6 +72,7 @@ public sealed class ProductDto
 	[JsonPropertyName("unitsOnOrder")]
 	[Description("Number of units currently on order from the supplier. Defaults to 0 when omitted.")]
 	[Range(0, short.MaxValue)]
+	[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 	public short? UnitsOnOrder { get; init; }
 
 	/// <summary>
@@ -79,6 +81,7 @@ public sealed class ProductDto
 	[JsonPropertyName("reorderLevel")]
 	[Description("Stock level at which more of the product should be reordered. Defaults to 0 when omitted.")]
 	[Range(0, short.MaxValue)]
+	[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 	public short? ReorderLevel { get; init; }
 
 	/// <summary>

@@ -88,6 +88,18 @@ public class ProductDtoTests
     }
 
     [Test]
+    public void ProductDto_Serialize_UnsetStockLevels_OmitsDefaultedValues_Test()
+    {
+        var product = new ProductDto { ProductName = "Chai" };
+
+        var json = JsonSerializer.Serialize(product);
+
+        Assert.That(json, Does.Not.Contain("\"unitsInStock\""));
+        Assert.That(json, Does.Not.Contain("\"unitsOnOrder\""));
+        Assert.That(json, Does.Not.Contain("\"reorderLevel\""));
+    }
+
+    [Test]
     public void ProductDto_Deserialize_NullStockLevels_MapsToNull_Test()
     {
         const string json = """{"productId":1,"productName":"Chai","unitsInStock":null,"unitsOnOrder":null,"reorderLevel":null}""";
