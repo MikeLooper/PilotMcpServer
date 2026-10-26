@@ -26,10 +26,7 @@
   <!-- The OpenAPI contract lives in the PilotSharedSource git submodule; it is copied (not duplicated in source control)
        next to the test assembly so the compliance tests always validate against the current shared contract. -->
   <ItemGroup>
-    <None Include="..\..\shared\PilotSharedSource\OpenAPI\PilotApi_v1.yaml"
-          Link="Testing\Resources\PilotApi_v1.yaml"
-          CopyToOutputDirectory="PreserveNewest"
-          Condition="Exists('..\..\shared\PilotSharedSource\OpenAPI\PilotApi_v1.yaml')" />
+    <None Include="..\..\shared\PilotSharedSource\OpenAPI\PilotApi_v1.yaml" Link="Testing\Resources\PilotApi_v1.yaml" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\..\shared\PilotSharedSource\OpenAPI\PilotApi_v1.yaml')" />
   </ItemGroup>
 
 </Project>

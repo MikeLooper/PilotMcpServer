@@ -4,6 +4,7 @@ using PilotMcpServer.Models.Dto;
 using PilotMcpServer.Services;
 using PilotMcpServer.Tools.Base;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace PilotMcpServer.Tools;
 
@@ -22,7 +23,7 @@ public sealed class CategoriesTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "get_category")]
     [Description("Retrieves a single product category by its numeric ID. Returns null if no category with that ID exists.")]
     public Task<CategoryDto?> GetCategoryAsync(
-        [Description("Numeric ID of the category to retrieve. Required.")] int categoryId,
+        [Description("Numeric ID of the category to retrieve. Required.")] [Range(1, int.MaxValue)] int categoryId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.GetJsonAsync<CategoryDto>($"/v{this.ApiVersion}/categories/get/{categoryId}", apiName, cancellationToken);
@@ -46,7 +47,7 @@ public sealed class CategoriesTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "delete_category")]
     [Description("Deletes a product category by its numeric ID.")]
     public Task DeleteCategoryAsync(
-        [Description("Numeric ID of the category to delete. Required.")] int categoryId,
+        [Description("Numeric ID of the category to delete. Required.")] [Range(1, int.MaxValue)] int categoryId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.DeleteAsync($"/v{this.ApiVersion}/categories/delete/{categoryId}", apiName, cancellationToken);

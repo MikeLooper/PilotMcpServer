@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace PilotMcpServer.Models.Dto;
@@ -13,6 +14,7 @@ public sealed class CategoryDto
 	/// </summary>
 	[JsonPropertyName("categoryId")]
 	[Description("Unique identifier of the category. Omit when adding a new category; the API assigns it.")]
+	[Range(1, int.MaxValue)]
 	public int? CategoryId { get; init; }
 	
 	/// <summary>
@@ -20,6 +22,7 @@ public sealed class CategoryDto
 	/// </summary>
 	[JsonPropertyName("categoryName")]
 	[Description("Name of the category.")]
+	[StringLength(15, MinimumLength = 1)]
 	public required string CategoryName { get; init; }
 	
 	/// <summary>

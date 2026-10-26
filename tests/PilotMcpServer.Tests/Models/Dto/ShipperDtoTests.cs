@@ -60,10 +60,10 @@ public class ShipperDtoTests
     }
 
     [Test]
-    public void ShipperDto_CompanyName_Unset_IsNull_Test()
+    public void ShipperDto_Deserialize_WithoutCompanyName_Throws_Test()
     {
-        var shipper = new ShipperDto { ShipperId = 1 };
+        const string json = """{"shipperId":1,"phone":"(503) 555-9831"}""";
 
-        Assert.That(shipper.CompanyName, Is.Null);
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<ShipperDto>(json));
     }
 }

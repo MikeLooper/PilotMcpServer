@@ -4,6 +4,7 @@ using PilotMcpServer.Models.Dto;
 using PilotMcpServer.Services;
 using PilotMcpServer.Tools.Base;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace PilotMcpServer.Tools;
 
@@ -22,7 +23,7 @@ public sealed class SuppliersTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "get_supplier")]
     [Description("Retrieves a single supplier by its numeric ID. Returns null if no supplier with that ID exists.")]
     public Task<SupplierDto?> GetSupplierAsync(
-        [Description("Numeric ID of the supplier to retrieve. Required.")] int supplierId,
+        [Description("Numeric ID of the supplier to retrieve. Required.")] [Range(1, int.MaxValue)] int supplierId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.GetJsonAsync<SupplierDto>($"/v{this.ApiVersion}/suppliers/get/{supplierId}", apiName, cancellationToken);
@@ -46,7 +47,7 @@ public sealed class SuppliersTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "delete_supplier")]
     [Description("Deletes a supplier by its numeric ID.")]
     public Task DeleteSupplierAsync(
-        [Description("Numeric ID of the supplier to delete. Required.")] int supplierId,
+        [Description("Numeric ID of the supplier to delete. Required.")] [Range(1, int.MaxValue)] int supplierId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.DeleteAsync($"/v{this.ApiVersion}/suppliers/delete/{supplierId}", apiName, cancellationToken);

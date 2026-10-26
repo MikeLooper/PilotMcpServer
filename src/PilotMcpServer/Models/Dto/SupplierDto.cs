@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace PilotMcpServer.Models.Dto;
@@ -13,6 +14,7 @@ public sealed class SupplierDto
 	/// </summary>
 	[JsonPropertyName("supplierId")]
 	[Description("Unique identifier of the supplier. Omit when adding a new supplier; the API assigns it.")]
+	[Range(1, int.MaxValue)]
 	public int? SupplierId { get; init; }
 
 	/// <summary>
@@ -20,6 +22,7 @@ public sealed class SupplierDto
 	/// </summary>
 	[JsonPropertyName("companyName")]
 	[Description("Name of the supplier's company.")]
+	[StringLength(40, MinimumLength = 1)]
 	public required string CompanyName { get; init; }
 
 	/// <summary>
@@ -27,6 +30,7 @@ public sealed class SupplierDto
 	/// </summary>
 	[JsonPropertyName("contactName")]
 	[Description("Name of the primary contact at the supplier.")]
+	[StringLength(30)]
 	public string? ContactName { get; init; }
 
 	/// <summary>
@@ -34,6 +38,7 @@ public sealed class SupplierDto
 	/// </summary>
 	[JsonPropertyName("contactTitle")]
 	[Description("Job title of the primary contact.")]
+	[StringLength(30)]
 	public string? ContactTitle { get; init; }
 
 	/// <summary>
@@ -41,6 +46,7 @@ public sealed class SupplierDto
 	/// </summary>
 	[JsonPropertyName("address")]
 	[Description("Street address of the supplier.")]
+	[StringLength(60)]
 	public string? Address { get; init; }
 
 	/// <summary>
@@ -48,6 +54,7 @@ public sealed class SupplierDto
 	/// </summary>
 	[JsonPropertyName("city")]
 	[Description("City of the supplier's address.")]
+	[StringLength(15)]
 	public string? City { get; init; }
 
 	/// <summary>
@@ -55,6 +62,7 @@ public sealed class SupplierDto
 	/// </summary>
 	[JsonPropertyName("region")]
 	[Description("State or region of the supplier's address.")]
+	[StringLength(15)]
 	public string? Region { get; init; }
 
 	/// <summary>
@@ -62,6 +70,7 @@ public sealed class SupplierDto
 	/// </summary>
 	[JsonPropertyName("postalCode")]
 	[Description("Postal or ZIP code of the supplier's address.")]
+	[StringLength(10)]
 	public string? PostalCode { get; init; }
 
 	/// <summary>
@@ -69,6 +78,7 @@ public sealed class SupplierDto
 	/// </summary>
 	[JsonPropertyName("country")]
 	[Description("Country of the supplier's address.")]
+	[StringLength(15)]
 	public string? Country { get; init; }
 
 	/// <summary>
@@ -76,6 +86,7 @@ public sealed class SupplierDto
 	/// </summary>
 	[JsonPropertyName("phone")]
 	[Description("Phone number for the supplier.")]
+	[StringLength(24)]
 	public string? Phone { get; init; }
 
 	/// <summary>
@@ -83,6 +94,7 @@ public sealed class SupplierDto
 	/// </summary>
 	[JsonPropertyName("fax")]
 	[Description("Fax number for the supplier.")]
+	[StringLength(24)]
 	public string? Fax { get; init; }
 
 	/// <summary>

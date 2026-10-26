@@ -4,6 +4,7 @@ using PilotMcpServer.Models.Dto;
 using PilotMcpServer.Services;
 using PilotMcpServer.Tools.Base;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace PilotMcpServer.Tools;
 
@@ -22,7 +23,7 @@ public sealed class ProductsTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "get_product")]
     [Description("Retrieves a single product by its numeric ID. Returns null if no product with that ID exists.")]
     public Task<ProductDto?> GetProductAsync(
-        [Description("Numeric ID of the product to retrieve. Required.")] int productId,
+        [Description("Numeric ID of the product to retrieve. Required.")] [Range(1, int.MaxValue)] int productId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.GetJsonAsync<ProductDto>($"/v{this.ApiVersion}/products/get/{productId}", apiName, cancellationToken);
@@ -46,7 +47,7 @@ public sealed class ProductsTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "delete_product")]
     [Description("Deletes a product by its numeric ID.")]
     public Task DeleteProductAsync(
-        [Description("Numeric ID of the product to delete. Required.")] int productId,
+        [Description("Numeric ID of the product to delete. Required.")] [Range(1, int.MaxValue)] int productId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.DeleteAsync($"/v{this.ApiVersion}/products/delete/{productId}", apiName, cancellationToken);

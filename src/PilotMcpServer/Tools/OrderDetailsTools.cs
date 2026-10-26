@@ -4,6 +4,7 @@ using PilotMcpServer.Models.Dto;
 using PilotMcpServer.Services;
 using PilotMcpServer.Tools.Base;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace PilotMcpServer.Tools;
 
@@ -22,8 +23,8 @@ public sealed class OrderDetailsTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "get_order_detail")]
     [Description("Retrieves a single order line, identified by its product ID and order ID. Returns null if no matching order line exists.")]
     public Task<OrderDetailDto?> GetOrderDetailAsync(
-        [Description("Numeric ID of the product on the order line. Required.")] int productId,
-        [Description("Numeric ID of the order the line belongs to. Required.")] int orderId,
+        [Description("Numeric ID of the product on the order line. Required.")] [Range(1, int.MaxValue)] int productId,
+        [Description("Numeric ID of the order the line belongs to. Required.")] [Range(1, int.MaxValue)] int orderId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.GetJsonAsync<OrderDetailDto>($"/v{this.ApiVersion}/order-details/get/product/{productId}/order/{orderId}", apiName, cancellationToken);
@@ -47,8 +48,8 @@ public sealed class OrderDetailsTools(IPilotHttpClient client) : ToolBase
     [McpServerTool(Name = "delete_order_detail")]
     [Description("Deletes an order line, identified by its product ID and order ID.")]
     public Task DeleteOrderDetailAsync(
-        [Description("Numeric ID of the product on the order line. Required.")] int productId,
-        [Description("Numeric ID of the order the line belongs to. Required.")] int orderId,
+        [Description("Numeric ID of the product on the order line. Required.")] [Range(1, int.MaxValue)] int productId,
+        [Description("Numeric ID of the order the line belongs to. Required.")] [Range(1, int.MaxValue)] int orderId,
         [Description("Optional. Name of the Pilot API to call (see list_apis). Defaults to the currently selected API.")] string? apiName = null,
         CancellationToken cancellationToken = default)
         => client.DeleteAsync($"/v{this.ApiVersion}/order-details/delete/product/{productId}/order/{orderId}", apiName, cancellationToken);
