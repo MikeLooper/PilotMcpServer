@@ -1,0 +1,30 @@
+meta {
+  name: list_apis - selection unchanged
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 15,
+    "method": "tools/call",
+    "params": {
+      "name": "list_apis",
+      "arguments": {}
+    }
+  }
+}
+
+tests {
+  test("keeps the previous selection after a rejected name", function () {
+    const selected = res.getBody().tool.filter((api) => api.isSelected).map((api) => api.name);
+    expect(selected).to.deep.equal([bru.interpolate("{{alternateApiName}}")]);
+  });
+}

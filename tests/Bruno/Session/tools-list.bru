@@ -1,0 +1,82 @@
+meta {
+  name: tools-list
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/list",
+    "params": {}
+  }
+}
+
+tests {
+  const expected = [
+    "add_category",
+    "add_customer",
+    "add_employee",
+    "add_order",
+    "add_order_detail",
+    "add_product",
+    "add_shipper",
+    "add_supplier",
+    "delete_category",
+    "delete_customer",
+    "delete_employee",
+    "delete_order",
+    "delete_order_detail",
+    "delete_product",
+    "delete_shipper",
+    "delete_supplier",
+    "get_about",
+    "get_all_categories",
+    "get_all_customers",
+    "get_all_employees",
+    "get_all_order_details",
+    "get_all_orders",
+    "get_all_products",
+    "get_all_shippers",
+    "get_all_suppliers",
+    "get_category",
+    "get_customer",
+    "get_employee",
+    "get_healthcheck",
+    "get_order",
+    "get_order_detail",
+    "get_product",
+    "get_shipper",
+    "get_supplier",
+    "list_apis",
+    "list_endpoints",
+    "select_api",
+    "update_category",
+    "update_customer",
+    "update_employee",
+    "update_order",
+    "update_order_detail",
+    "update_product",
+    "update_shipper",
+    "update_supplier"
+  ];
+
+  test("lists exactly the expected tools", function () {
+    const names = res.getBody().result.tools.map((tool) => tool.name).sort();
+    expect(names).to.deep.equal(expected);
+  });
+
+  test("declares an optional correlationId argument on every tool", function () {
+    res.getBody().result.tools.forEach((tool) => {
+      expect(tool.inputSchema.properties.correlationId, tool.name).to.be.an("object");
+      expect(tool.inputSchema.required || [], tool.name).to.not.include("correlationId");
+    });
+  });
+}

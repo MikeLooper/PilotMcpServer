@@ -1,0 +1,35 @@
+meta {
+  name: get_supplier - after update
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 77,
+    "method": "tools/call",
+    "params": {
+      "name": "get_supplier",
+      "arguments": {
+        "supplierId": {{supplierId}},
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the expected record", function () {
+    const record = res.getBody().tool;
+    expect(record.supplierId).to.equal(bru.getVar("supplierId"));
+    expect(record.companyName).to.equal("Bruno Updated");
+    expect(record.city).to.equal("Seattle");
+  });
+}

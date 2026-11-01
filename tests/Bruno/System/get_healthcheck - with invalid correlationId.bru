@@ -1,0 +1,32 @@
+meta {
+  name: get_healthcheck - with invalid correlationId
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "tools/call",
+    "params": {
+      "name": "get_healthcheck",
+      "arguments": {
+        "apiName": "{{apiName}}",
+        "correlationId": "not-a-guid"
+      }
+    }
+  }
+}
+
+tests {
+  test("does not fail the call", function () {
+    expect(res.getBody().tool).to.equal(true);
+  });
+}

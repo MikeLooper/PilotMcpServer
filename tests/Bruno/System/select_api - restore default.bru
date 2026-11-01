@@ -1,0 +1,31 @@
+meta {
+  name: select_api - restore default
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 16,
+    "method": "tools/call",
+    "params": {
+      "name": "select_api",
+      "arguments": {
+        "apiName": ".NET Core with SQL Server"
+      }
+    }
+  }
+}
+
+tests {
+  test("succeeds", function () {
+    expect(res.getBody().result.isError).to.not.equal(true);
+  });
+}

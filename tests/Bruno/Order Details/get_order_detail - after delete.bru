@@ -1,0 +1,35 @@
+meta {
+  name: get_order_detail - after delete
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 90,
+    "method": "tools/call",
+    "params": {
+      "name": "get_order_detail",
+      "arguments": {
+        "productId": {{lineProductId}},
+        "orderId": {{lineOrderId}},
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns null for the deleted record", function () {
+    const result = res.getBody().result;
+    expect(result.isError, result.content[0] && result.content[0].text).to.not.equal(true);
+    expect(res.getBody().tool === null || res.getBody().tool === undefined).to.equal(true);
+  });
+}

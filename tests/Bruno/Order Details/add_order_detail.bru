@@ -1,0 +1,40 @@
+meta {
+  name: add_order_detail
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 85,
+    "method": "tools/call",
+    "params": {
+      "name": "add_order_detail",
+      "arguments": {
+        "orderDetail": {
+          "orderId": {{lineOrderId}},
+          "productId": {{lineProductId}},
+          "unitPrice": 9.5,
+          "quantity": 2,
+          "discount": 0.25
+        },
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the composite key", function () {
+    const added = res.getBody().tool;
+    expect(added.orderId).to.equal(bru.getVar("lineOrderId"));
+    expect(added.productId).to.equal(bru.getVar("lineProductId"));
+  });
+}

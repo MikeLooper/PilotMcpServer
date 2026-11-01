@@ -24,4 +24,10 @@ public class AddResponseStringTests
         Assert.That(response, Is.Not.Null);
         Assert.That(response!.Id, Is.EqualTo("NEWCO"));
     }
+
+    [Test]
+    public void AddResponseString_Deserialize_MissingId_ThrowsJsonException_Test()
+    {
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<AddResponseString>("{}"));
+    }
 }

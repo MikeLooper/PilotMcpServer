@@ -123,6 +123,8 @@ public static partial class ImplementedContractBuilder
 
         var (successType, statusOnly) = UnwrapReturnType(tool.ReturnType);
         var returnNullability = new NullabilityInfoContext().Create(tool.ReturnParameter).GenericTypeArguments.FirstOrDefault();
+        var returnsNull = returnNullability?.ReadState == NullabilityState.Nullable;
+        var returnsList = successType is { IsGenericType: true } && successType.GetGenericTypeDefinition() == typeof(IReadOnlyList<>);
 
         return new ImplementedOperation
         {
@@ -135,7 +137,8 @@ public static partial class ImplementedContractBuilder
             RequestBody = requestBody,
             ResponseMediaType = JsonMediaType,
             SuccessSchema = successType is null ? null : responseSchemas.Build(successType),
-            HandlesNotFound = returnNullability?.ReadState == NullabilityState.Nullable,
+            HandlesNotFound = returnsNull,
+            HandlesNoContent = returnsNull || returnsList,
             ErrorSchema = statusOnly ? null : responseSchemas.Build(typeof(ProblemDetailsResponse)),
             SendsBearerToken = probedRequest.Headers.Authorization is not null,
         };

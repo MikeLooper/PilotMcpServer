@@ -1,0 +1,38 @@
+meta {
+  name: update_employee
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 40,
+    "method": "tools/call",
+    "params": {
+      "name": "update_employee",
+      "arguments": {
+        "employee": {
+          "firstName": "Bruno",
+          "lastName": "Updated",
+          "title": "Lead Tester",
+          "city": "Portland",
+          "employeeId": {{employeeId}}
+        },
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("succeeds", function () {
+    expect(res.getBody().result.isError).to.not.equal(true);
+  });
+}

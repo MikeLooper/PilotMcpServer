@@ -1,0 +1,37 @@
+meta {
+  name: add_supplier
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 74,
+    "method": "tools/call",
+    "params": {
+      "name": "add_supplier",
+      "arguments": {
+        "supplier": {
+          "companyName": "Bruno Test",
+          "city": "Portland"
+        },
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the new ID", function () {
+    const id = res.getBody().tool.id;
+    expect(id).to.be.a("number").that.is.above(0);
+    bru.setVar("supplierId", id);
+  });
+}

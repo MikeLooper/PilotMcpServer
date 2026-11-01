@@ -1,0 +1,36 @@
+meta {
+  name: update_shipper
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 67,
+    "method": "tools/call",
+    "params": {
+      "name": "update_shipper",
+      "arguments": {
+        "shipper": {
+          "companyName": "Bruno Updated",
+          "phone": "555-0199",
+          "shipperId": {{shipperId}}
+        },
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("succeeds", function () {
+    expect(res.getBody().result.isError).to.not.equal(true);
+  });
+}

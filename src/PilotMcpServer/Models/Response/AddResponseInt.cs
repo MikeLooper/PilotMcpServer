@@ -13,5 +13,5 @@ public sealed class AddResponseInt
 	/// </summary>
 	[JsonPropertyName("id")]
 	[Description("The identifier assigned to the newly created record.")]
-	public long Id { get; init; }
+	public required int Id { get; init; }
 }

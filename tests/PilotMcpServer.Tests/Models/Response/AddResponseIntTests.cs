@@ -24,4 +24,16 @@ public class AddResponseIntTests
         Assert.That(response, Is.Not.Null);
         Assert.That(response!.Id, Is.EqualTo(42));
     }
+
+    [Test]
+    public void AddResponseInt_Deserialize_MissingId_ThrowsJsonException_Test()
+    {
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<AddResponseInt>("{}"));
+    }
+
+    [Test]
+    public void AddResponseInt_Deserialize_IdOutsideInt32Range_ThrowsJsonException_Test()
+    {
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<AddResponseInt>("""{"id":2147483648}"""));
+    }
 }

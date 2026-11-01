@@ -1,0 +1,40 @@
+meta {
+  name: Pilot MCP Server
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json, text/event-stream
+}
+
+vars:pre-request {
+  mcpUrl: http://localhost:11901
+  apiName: .NET Core with SQL Server
+  alternateApiName: .NET Core with PostgreSQL
+}
+
+script:post-response {
+  // The server answers with a single Server-Sent Event holding the JSON-RPC response. Replace the body with that
+  // response, and add a "tool" property holding the parsed JSON text returned by tools/call.
+  const raw = res.getBody();
+  if (typeof raw === 'string' && raw.includes('data:')) {
+    const dataLine = raw.split('\n').find((line) => line.startsWith('data:'));
+    const message = JSON.parse(dataLine.substring('data:'.length));
+    const text = message.result && message.result.content && message.result.content[0] && message.result.content[0].text;
+    if (text !== undefined && text !== null && !message.result.isError) {
+      message.tool = JSON.parse(text);
+    }
+    res.setBody(message);
+  }
+}
+
+tests {
+  const request = req.getBody();
+  if (request && request.id !== undefined) {
+    test("responds with the JSON-RPC result for this request", function () {
+      expect(res.getStatus()).to.equal(200);
+      expect(res.getBody().id).to.equal(request.id);
+      expect(res.getBody().error).to.equal(undefined);
+    });
+  }
+}

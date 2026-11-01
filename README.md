@@ -23,6 +23,7 @@ PilotMcpServer/
 └── tests/
     ├── PilotMcpServer.IntegrationTests/  # NUnit integration tests (OpenAPI compliance)
     ├── PilotMcpServer.Tests/    # NUnit + Moq unit tests, mirrors src/ layout
+    ├── Bruno                    # Bruno collection that calls every tool against a running Pilot API
     └── vscode                   # VS Code manual validation and testing
 ```
 
@@ -332,6 +333,16 @@ The derived contract is then compared with the spec, which is read with Microsof
 **When a test fails**
 
 Decide which side is correct. If the spec changed, update the DTOs, tools or `PilotEndpointCatalog` to match it. If the client is right, change the spec in the `PilotSharedSource` repository and then bump the submodule (see [Shared source submodule](#shared-source-submodule)).
+
+### Bruno tests
+
+`tests/Bruno` holds a [Bruno](https://www.usebruno.com/) collection that calls every tool against a running Pilot API. Bruno sends HTTP requests, so the server has an opt-in HTTP mode for it, which accepts loopback addresses only:
+
+```bash
+dotnet run --project src/PilotMcpServer -- --http-url http://localhost:11901
+```
+
+This endpoint has no authentication, and its tools can change data, so use it for local testing only. See the [Bruno tests README](tests/Bruno/README.md) for how to run the collection.
 
 ### Manual validation in VS Code
 

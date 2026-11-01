@@ -1,0 +1,36 @@
+meta {
+  name: get_employee - after add
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 39,
+    "method": "tools/call",
+    "params": {
+      "name": "get_employee",
+      "arguments": {
+        "employeeId": {{employeeId}},
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the expected record", function () {
+    const record = res.getBody().tool;
+    expect(record.employeeId).to.equal(bru.getVar("employeeId"));
+    expect(record.firstName).to.equal("Bruno");
+    expect(record.lastName).to.equal("Test");
+    expect(record.title).to.equal("Tester");
+  });
+}

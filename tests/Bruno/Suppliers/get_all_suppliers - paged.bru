@@ -1,0 +1,33 @@
+meta {
+  name: get_all_suppliers - paged
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 72,
+    "method": "tools/call",
+    "params": {
+      "name": "get_all_suppliers",
+      "arguments": {
+        "page": 1,
+        "pageSize": 1,
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the requested page size", function () {
+    expect(res.getBody().tool).to.have.lengthOf(1);
+  });
+}

@@ -1,0 +1,38 @@
+meta {
+  name: get_about - alternate API
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 10,
+    "method": "tools/call",
+    "params": {
+      "name": "get_about",
+      "arguments": {
+        "apiName": "{{alternateApiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the deployment's metadata", function () {
+    const about = res.getBody().tool;
+    expect(about.name).to.be.a("string").and.not.equal("");
+    expect(about.apiVersion).to.be.a("string").and.not.equal("");
+    expect(about.buildVersion).to.be.a("string").and.not.equal("");
+  });
+
+  test("records the alternate deployment's name", function () {
+    bru.setVar("alternateAboutName", res.getBody().tool.name);
+  });
+}

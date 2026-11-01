@@ -1,0 +1,33 @@
+meta {
+  name: get_all_suppliers
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 71,
+    "method": "tools/call",
+    "params": {
+      "name": "get_all_suppliers",
+      "arguments": {
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns records with their ID", function () {
+    const records = res.getBody().tool;
+    expect(records).to.be.an("array").that.is.not.empty;
+    expect(records[0]).to.have.property("supplierId");
+  });
+}

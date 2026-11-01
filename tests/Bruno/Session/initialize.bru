@@ -1,0 +1,35 @@
+meta {
+  name: initialize
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2025-06-18",
+      "capabilities": {},
+      "clientInfo": {
+        "name": "bruno",
+        "version": "1.0.0"
+      }
+    }
+  }
+}
+
+tests {
+  test("identifies the server and offers tools", function () {
+    const result = res.getBody().result;
+    expect(result.serverInfo.name).to.equal("Pilot MCP Server");
+    expect(result.capabilities.tools).to.be.an("object");
+  });
+}

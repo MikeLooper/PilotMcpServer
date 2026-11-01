@@ -1,0 +1,39 @@
+meta {
+  name: add_employee
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 38,
+    "method": "tools/call",
+    "params": {
+      "name": "add_employee",
+      "arguments": {
+        "employee": {
+          "firstName": "Bruno",
+          "lastName": "Test",
+          "title": "Tester",
+          "city": "Portland"
+        },
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the new ID", function () {
+    const id = res.getBody().tool.id;
+    expect(id).to.be.a("number").that.is.above(0);
+    bru.setVar("employeeId", id);
+  });
+}

@@ -1,0 +1,36 @@
+meta {
+  name: get_order_detail - after update
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 88,
+    "method": "tools/call",
+    "params": {
+      "name": "get_order_detail",
+      "arguments": {
+        "productId": {{lineProductId}},
+        "orderId": {{lineOrderId}},
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the expected order line", function () {
+    const record = res.getBody().tool;
+    expect(record.orderId).to.equal(bru.getVar("lineOrderId"));
+    expect(record.productId).to.equal(bru.getVar("lineProductId"));
+    expect(record.quantity).to.equal(7);
+  });
+}

@@ -1,0 +1,31 @@
+meta {
+  name: get_healthcheck
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "get_healthcheck",
+      "arguments": {
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("reports the deployment as healthy", function () {
+    expect(res.getBody().tool).to.equal(true);
+  });
+}

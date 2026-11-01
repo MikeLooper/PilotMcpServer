@@ -1,0 +1,35 @@
+meta {
+  name: get_customer - after update
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 32,
+    "method": "tools/call",
+    "params": {
+      "name": "get_customer",
+      "arguments": {
+        "customerId": "{{customerId}}",
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the expected record", function () {
+    const record = res.getBody().tool;
+    expect(String(record.customerId)).to.equal(String(bru.getVar("customerId")));
+    expect(record.companyName).to.equal("Bruno Updated");
+    expect(record.city).to.equal("Seattle");
+  });
+}

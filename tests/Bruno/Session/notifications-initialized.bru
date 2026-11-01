@@ -1,0 +1,25 @@
+meta {
+  name: notifications-initialized
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "method": "notifications/initialized",
+    "params": {}
+  }
+}
+
+tests {
+  test("accepts the notification", function () {
+    expect(res.getStatus()).to.equal(202);
+  });
+}

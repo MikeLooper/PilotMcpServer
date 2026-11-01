@@ -1,0 +1,35 @@
+meta {
+  name: get_order - after update
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 50,
+    "method": "tools/call",
+    "params": {
+      "name": "get_order",
+      "arguments": {
+        "orderId": {{orderId}},
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the expected record", function () {
+    const record = res.getBody().tool;
+    expect(record.orderId).to.equal(bru.getVar("orderId"));
+    expect(record.shipName).to.equal("Bruno Updated");
+    expect(record.shipCity).to.equal("Seattle");
+  });
+}

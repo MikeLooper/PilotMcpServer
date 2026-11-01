@@ -1,0 +1,32 @@
+meta {
+  name: delete_product
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 60,
+    "method": "tools/call",
+    "params": {
+      "name": "delete_product",
+      "arguments": {
+        "productId": {{productId}},
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("succeeds", function () {
+    expect(res.getBody().result.isError).to.not.equal(true);
+  });
+}

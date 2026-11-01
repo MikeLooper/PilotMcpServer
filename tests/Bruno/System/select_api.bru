@@ -1,0 +1,31 @@
+meta {
+  name: select_api
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 11,
+    "method": "tools/call",
+    "params": {
+      "name": "select_api",
+      "arguments": {
+        "apiName": "{{alternateApiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("succeeds", function () {
+    expect(res.getBody().result.isError).to.not.equal(true);
+  });
+}

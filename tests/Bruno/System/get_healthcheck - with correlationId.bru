@@ -1,0 +1,32 @@
+meta {
+  name: get_healthcheck - with correlationId
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tools/call",
+    "params": {
+      "name": "get_healthcheck",
+      "arguments": {
+        "apiName": "{{apiName}}",
+        "correlationId": "3f2504e0-4f89-41d3-9a0c-0305e82c3301"
+      }
+    }
+  }
+}
+
+tests {
+  test("accepts a supplied correlation ID", function () {
+    expect(res.getBody().tool).to.equal(true);
+  });
+}
