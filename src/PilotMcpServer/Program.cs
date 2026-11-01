@@ -24,7 +24,7 @@ else
 	await app.RunAsync();
 }
 
-static ModelContextProtocol.Server.IMcpServerBuilder AddPilotServices(IHostApplicationBuilder builder)
+static IMcpServerBuilder AddPilotServices(IHostApplicationBuilder builder)
 {
 	builder.Configuration.AddEmbeddedAppSettings();
 
