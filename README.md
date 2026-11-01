@@ -179,13 +179,57 @@ If the collector isn't running, the server works normally and the telemetry is d
 
 ### Correlation ID
 
-Each incoming MCP request (each tool call) gets its own `RequestSettings` with a new `CorrelationId` GUID. It is set up by an incoming message filter (`RequestSettingsMessageFilter`) and is available for the whole request through `IRequestSettingsAccessor`. The same value is:
+Each incoming MCP request (each tool call) gets its own `RequestSettings` with a `CorrelationId` GUID: the value the caller supplied, or a new GUID if it didn't supply one. It is set up by an incoming message filter (`RequestSettingsMessageFilter`) and is available for the whole request through `IRequestSettingsAccessor`. The same value is:
 
 - sent to the Pilot API as the `X-Correlation-Id` header on every request the tool call makes. Before this change, each HTTP request got its own random GUID.
 - added to `Activity.Tags` as **`correlationId`** on the MCP request span and on every span started during the request.
 - added to `LogRecord.Attributes` as **`CorrelationId`** on every log entry written during the request.
 
 Because the Pilot API records the incoming `X-Correlation-Id` too, one ID finds a tool call's log entries in both the MCP server and the API.
+
+**Supplying your own correlation ID**
+
+To tie a request to a correlation ID from your own system, pass a GUID named `correlationId`. It is optional, and there are two places to put it:
+
+| Location | Who uses it | Works on |
+| --- | --- | --- |
+| `params.arguments.correlationId` | Agents and skills, and any program calling a tool | `tools/call` |
+| `params._meta.correlationId` | MCP clients and hosts, and programs | Any MCP request, e.g. `initialize` or `tools/list` |
+
+Every tool lists `correlationId` in its input schema, so an agent or skill passes it like any other tool argument:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "get_category",
+    "arguments": { "categoryId": 1, "correlationId": "3f2504e0-4f89-41d3-9a0c-0305e82c3301" }
+  }
+}
+```
+
+A program or host can send it in `_meta` instead, which also covers requests that have no tool arguments:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list",
+  "params": {
+    "_meta": { "correlationId": "3f2504e0-4f89-41d3-9a0c-0305e82c3301" }
+  }
+}
+```
+
+- The name is case-sensitive.
+- If both locations hold a GUID, `_meta` is used.
+- Any format `Guid.TryParse` accepts is allowed. The value is converted to lowercase with hyphens (e.g. `3f2504e0-4f89-41d3-9a0c-0305e82c3301`), so search for that form in Grafana.
+- A missing or invalid value doesn't fail the request. The server generates a new GUID instead.
+- The value applies to that one request only. To use it on several requests, send it on each one.
+
+The schema is added to every tool when the server starts (`CorrelationIdToolArgument`), so new tools get it without declaring a method parameter.
 
 ### Exception attributes
 
