@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using PilotMcpServer.Configuration;
 using PilotMcpServer.Contracts.Services;
 using PilotMcpServer.Services;
@@ -68,8 +69,23 @@ public static class HostBuilderExtensions
 
 	/// <summary>
 	/// Gives each incoming MCP request (e.g. a tool call) its own <see cref="Models.RequestSettings"/>, so its
-	/// correlation ID is shared by the Pilot API requests, spans and log records the request produces.
+	/// correlation ID is shared by the Pilot API requests, spans and log records the request produces, and declares
+	/// the optional <c>correlationId</c> argument on every tool.
 	/// </summary>
 	public static IMcpServerBuilder WithRequestSettings(this IMcpServerBuilder builder)
-		=> builder.WithMessageFilters(filters => filters.AddIncomingFilter(RequestSettingsMessageFilter.Create));
+	{
+		builder.Services.PostConfigure<McpServerOptions>(options =>
+		{
+			foreach (var tool in options.ToolCollection ?? [])
+			{
+				CorrelationIdToolArgument.AddToInputSchema(tool);
+			}
+		});
+
+		return builder.WithMessageFilters(filters =>
+		{
+			filters.AddIncomingFilter(RequestSettingsMessageFilter.Create);
+			filters.AddOutgoingFilter(RequestSettingsMessageFilter.CreateOutgoing);
+		});
+	}
 }

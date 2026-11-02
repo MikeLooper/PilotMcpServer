@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -13,14 +14,21 @@ namespace PilotMcpServer.Services;
 /// <see cref="RequestSettings"/>, and so its own correlation ID, for the whole time the request is handled, and
 /// tags the current span with that correlation ID. A message filter is used rather than a call-tool filter because
 /// the SDK writes its "tool completed" / "tool threw" log entries outside the call-tool filter pipeline.
-/// Notifications and responses pass through unchanged.
+/// The caller can supply the correlation ID as a GUID in <c>params._meta.correlationId</c> on any request, or in
+/// <c>params.arguments.correlationId</c> on a tool call. <c>_meta</c> wins if both hold a GUID; if neither does, a
+/// new one is generated. Notifications pass through unchanged. <see cref="CreateOutgoing"/> returns the IDs on the
+/// response's <c>result._meta</c>, so a caller can look the request up, or reuse a generated ID for its next call.
 /// </summary>
 public static class RequestSettingsMessageFilter
 {
+	public const string CorrelationIdKey = "correlationId";
+
+	public const string TraceIdKey = "traceId";
+
 	public static McpMessageHandler Create(McpMessageHandler next)
 		=> async (context, cancellationToken) =>
 		{
-			if (context.JsonRpcMessage is not JsonRpcRequest)
+			if (context.JsonRpcMessage is not JsonRpcRequest request)
 			{
 				await next(context, cancellationToken).ConfigureAwait(false);
 				return;
@@ -28,7 +36,7 @@ public static class RequestSettingsMessageFilter
 
 			var accessor = context.Services?.GetService<IRequestSettingsAccessor>() ?? new RequestSettingsAccessor();
 			var previous = accessor.Current;
-			var requestSettings = new RequestSettings();
+			var requestSettings = CreateRequestSettings(request);
 
 			accessor.Current = requestSettings;
 			Activity.Current?.SetTag(OtelAttributeNames.CorrelationIdTag, requestSettings.CorrelationId);
@@ -42,4 +50,43 @@ public static class RequestSettingsMessageFilter
 				accessor.Current = previous;
 			}
 		};
+
+	public static McpMessageHandler CreateOutgoing(McpMessageHandler next)
+		=> (context, cancellationToken) =>
+		{
+			var requestSettings = context.Services?.GetService<IRequestSettingsAccessor>()?.Current;
+			if (requestSettings is not null && context.JsonRpcMessage is JsonRpcResponse { Result: JsonObject result })
+			{
+				if (result["_meta"] is not JsonObject meta)
+				{
+					meta = [];
+					result["_meta"] = meta;
+				}
+
+				meta[CorrelationIdKey] = requestSettings.CorrelationId;
+				if (Activity.Current is { } activity)
+				{
+					meta[TraceIdKey] = activity.TraceId.ToString();
+				}
+			}
+
+			return next(context, cancellationToken);
+		};
+
+	private static RequestSettings CreateRequestSettings(JsonRpcRequest request)
+	{
+		var parameters = request.Params as JsonObject;
+		var guid = ReadCorrelationId(parameters?["_meta"])
+			?? (request.Method == RequestMethods.ToolsCall ? ReadCorrelationId(parameters?["arguments"]) : null);
+
+		return guid is null ? new RequestSettings() : new RequestSettings { CorrelationId = guid.Value.ToString() };
+	}
+
+	private static Guid? ReadCorrelationId(JsonNode? container)
+		=> container is JsonObject values &&
+			values[CorrelationIdKey] is JsonValue value &&
+			value.TryGetValue<string>(out var correlationId) &&
+			Guid.TryParse(correlationId, out var guid)
+			? guid
+			: null;
 }

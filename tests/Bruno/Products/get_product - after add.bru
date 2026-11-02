@@ -1,0 +1,35 @@
+meta {
+  name: get_product - after add
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 57,
+    "method": "tools/call",
+    "params": {
+      "name": "get_product",
+      "arguments": {
+        "productId": {{productId}},
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the expected record", function () {
+    const record = res.getBody().tool;
+    expect(record.productId).to.equal(bru.getVar("productId"));
+    expect(record.productName).to.equal("Bruno Test");
+    expect(record.discontinued).to.equal(false);
+  });
+}

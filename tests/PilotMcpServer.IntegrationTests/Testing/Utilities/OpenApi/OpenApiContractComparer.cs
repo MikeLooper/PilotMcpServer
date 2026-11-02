@@ -324,6 +324,11 @@ public sealed class OpenApiContractComparer(OpenApiDocument specification, Imple
                 continue;
             }
 
+            if (code == "204" && content.Count == 0 && implemented.HandlesNoContent)
+            {
+                continue;
+            }
+
             if (content.Count > 0 && mediaType is null)
             {
                 Add(ComplianceSeverity.Error, scope, location,

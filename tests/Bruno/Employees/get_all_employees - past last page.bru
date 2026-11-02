@@ -1,0 +1,33 @@
+meta {
+  name: get_all_employees - past last page
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 37,
+    "method": "tools/call",
+    "params": {
+      "name": "get_all_employees",
+      "arguments": {
+        "page": 999999,
+        "pageSize": 2,
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns no records", function () {
+    expect(res.getBody().tool).to.deep.equal([]);
+  });
+}

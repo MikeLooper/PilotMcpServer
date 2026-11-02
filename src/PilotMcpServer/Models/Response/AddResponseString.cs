@@ -13,5 +13,5 @@ public sealed class AddResponseString
 	/// </summary>
 	[JsonPropertyName("id")]
 	[Description("The identifier assigned to the newly created record.")]
-	public string? Id { get; init; }
+	public required string Id { get; init; }
 }

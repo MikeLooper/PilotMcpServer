@@ -1,0 +1,37 @@
+meta {
+  name: arrange - add_product
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 81,
+    "method": "tools/call",
+    "params": {
+      "name": "add_product",
+      "arguments": {
+        "product": {
+          "productName": "Bruno Test",
+          "discontinued": false
+        },
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("creates the record", function () {
+    const id = res.getBody().tool.id;
+    expect(id).to.be.a("number").that.is.above(0);
+    bru.setVar("lineProductId", id);
+  });
+}

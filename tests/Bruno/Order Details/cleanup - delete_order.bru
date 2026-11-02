@@ -1,0 +1,32 @@
+meta {
+  name: cleanup - delete_order
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 92,
+    "method": "tools/call",
+    "params": {
+      "name": "delete_order",
+      "arguments": {
+        "orderId": {{lineOrderId}},
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("succeeds", function () {
+    expect(res.getBody().result.isError).to.not.equal(true);
+  });
+}

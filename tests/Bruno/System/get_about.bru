@@ -1,0 +1,34 @@
+meta {
+  name: get_about
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 6,
+    "method": "tools/call",
+    "params": {
+      "name": "get_about",
+      "arguments": {
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the deployment's metadata", function () {
+    const about = res.getBody().tool;
+    expect(about.name).to.be.a("string").and.not.equal("");
+    expect(about.apiVersion).to.be.a("string").and.not.equal("");
+    expect(about.buildVersion).to.be.a("string").and.not.equal("");
+  });
+}

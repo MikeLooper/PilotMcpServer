@@ -1,0 +1,37 @@
+meta {
+  name: add_shipper
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 65,
+    "method": "tools/call",
+    "params": {
+      "name": "add_shipper",
+      "arguments": {
+        "shipper": {
+          "companyName": "Bruno Test",
+          "phone": "555-0100"
+        },
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the new ID", function () {
+    const id = res.getBody().tool.id;
+    expect(id).to.be.a("number").that.is.above(0);
+    bru.setVar("shipperId", id);
+  });
+}

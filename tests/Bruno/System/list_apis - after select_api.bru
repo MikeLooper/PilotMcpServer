@@ -1,0 +1,30 @@
+meta {
+  name: list_apis - after select_api
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 12,
+    "method": "tools/call",
+    "params": {
+      "name": "list_apis",
+      "arguments": {}
+    }
+  }
+}
+
+tests {
+  test("flags only the selected deployment", function () {
+    const selected = res.getBody().tool.filter((api) => api.isSelected).map((api) => api.name);
+    expect(selected).to.deep.equal([bru.interpolate("{{alternateApiName}}")]);
+  });
+}

@@ -9,9 +9,10 @@ namespace PilotMcpServer.Services;
 /// </summary>
 public interface IPilotHttpClient
 {
+    /// <summary>Returns an empty list when the server responds 204 No Content.</summary>
     Task<IReadOnlyList<T>> GetJsonListAsync<T>(string path, string? apiName, CancellationToken cancellationToken);
 
-    /// <summary>Returns <see langword="null"/> when the server responds 404 Not Found.</summary>
+    /// <summary>Returns <see langword="null"/> when the server responds 204 No Content or 404 Not Found.</summary>
     Task<T?> GetJsonAsync<T>(string path, string? apiName, CancellationToken cancellationToken) where T : class;
 
     Task<TResponse> PostJsonAsync<TRequest, TResponse>(string path, TRequest body, string? apiName, CancellationToken cancellationToken);

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -112,5 +113,126 @@ public class RequestSettingsMessageFilterTests
 		await handler(CreateContext(ToolCall()), CancellationToken.None);
 
 		Assert.That(activity.GetTagItem(OtelAttributeNames.CorrelationIdTag), Is.EqualTo(correlationId));
+	}
+
+	private async Task<string> GetCorrelationIdForParamsAsync(string paramsJson, string method = RequestMethods.ToolsCall)
+	{
+		string? correlationId = null;
+
+		var handler = RequestSettingsMessageFilter.Create((_, _) =>
+		{
+			correlationId = accessor.Current!.CorrelationId;
+			return Task.CompletedTask;
+		});
+		var request = new JsonRpcRequest { Id = new RequestId(1), Method = method, Params = JsonNode.Parse(paramsJson) };
+		await handler(CreateContext(request), CancellationToken.None);
+
+		return correlationId!;
+	}
+
+	[TestCase(RequestMethods.ToolsCall)]
+	[TestCase(RequestMethods.ToolsList)]
+	[TestCase(RequestMethods.Initialize)]
+	public async Task RequestSettingsMessageFilter_WithSuppliedCorrelationId_UsesSuppliedValue_Test(string method)
+	{
+		const string supplied = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
+
+		var correlationId = await GetCorrelationIdForParamsAsync($$$"""{"_meta":{"correlationId":"{{{supplied}}}"}}""", method);
+
+		Assert.That(correlationId, Is.EqualTo(supplied));
+	}
+
+	[TestCase("3F2504E0-4F89-41D3-9A0C-0305E82C3301")]
+	[TestCase("3f2504e04f8941d39a0c0305e82c3301")]
+	[TestCase("{3f2504e0-4f89-41d3-9a0c-0305e82c3301}")]
+	public async Task RequestSettingsMessageFilter_WithSuppliedCorrelationIdInOtherGuidFormat_UsesCanonicalValue_Test(string supplied)
+	{
+		var correlationId = await GetCorrelationIdForParamsAsync($$$"""{"_meta":{"correlationId":"{{{supplied}}}"}}""");
+
+		Assert.That(correlationId, Is.EqualTo("3f2504e0-4f89-41d3-9a0c-0305e82c3301"));
+	}
+
+	[TestCase("""{"_meta":{"correlationId":"not-a-guid"}}""")]
+	[TestCase("""{"_meta":{"correlationId":""}}""")]
+	[TestCase("""{"_meta":{"correlationId":null}}""")]
+	[TestCase("""{"_meta":{"correlationId":123}}""")]
+	[TestCase("""{"_meta":{"correlationId":{"value":"3f2504e0-4f89-41d3-9a0c-0305e82c3301"}}}""")]
+	[TestCase("""{"_meta":{"progressToken":"abc"}}""")]
+	[TestCase("""{"_meta":"3f2504e0-4f89-41d3-9a0c-0305e82c3301"}""")]
+	[TestCase("""{"_meta":["3f2504e0-4f89-41d3-9a0c-0305e82c3301"]}""")]
+	[TestCase("""["3f2504e0-4f89-41d3-9a0c-0305e82c3301"]""")]
+	[TestCase("""{"name":"get_category"}""")]
+	public async Task RequestSettingsMessageFilter_WithoutValidSuppliedCorrelationId_GeneratesNewGuid_Test(string paramsJson)
+	{
+		var correlationId = await GetCorrelationIdForParamsAsync(paramsJson);
+
+		Assert.That(Guid.TryParse(correlationId, out _), Is.True);
+		Assert.That(correlationId, Is.Not.EqualTo("3f2504e0-4f89-41d3-9a0c-0305e82c3301"));
+	}
+
+	[TestCase("""{"arguments":{"correlationId":"3f2504e0-4f89-41d3-9a0c-0305e82c3301"}}""")]
+	[TestCase("""{"_meta":{"correlationId":"not-a-guid"},"arguments":{"correlationId":"3f2504e0-4f89-41d3-9a0c-0305e82c3301"}}""")]
+	[TestCase("""{"_meta":{"correlationId":"3f2504e0-4f89-41d3-9a0c-0305e82c3301"},"arguments":{"correlationId":"7ea2c7f7-8b46-475d-86f8-7aaaa9e4a35b"}}""")]
+	public async Task RequestSettingsMessageFilter_ToolCall_ResolvesSuppliedCorrelationId_Test(string paramsJson)
+	{
+		var correlationId = await GetCorrelationIdForParamsAsync(paramsJson);
+
+		Assert.That(correlationId, Is.EqualTo("3f2504e0-4f89-41d3-9a0c-0305e82c3301"));
+	}
+
+	[Test]
+	public async Task RequestSettingsMessageFilter_ArgumentsOnOtherMethod_GeneratesNewGuid_Test()
+	{
+		var correlationId = await GetCorrelationIdForParamsAsync(
+			"""{"arguments":{"correlationId":"3f2504e0-4f89-41d3-9a0c-0305e82c3301"}}""",
+			RequestMethods.PromptsGet);
+
+		Assert.That(correlationId, Is.Not.EqualTo("3f2504e0-4f89-41d3-9a0c-0305e82c3301"));
+	}
+
+	[TestCase("""{"arguments":{"correlationId":"not-a-guid"}}""")]
+	[TestCase("""{"arguments":{"correlationId":null}}""")]
+	[TestCase("""{"arguments":"3f2504e0-4f89-41d3-9a0c-0305e82c3301"}""")]
+	[TestCase("""{"_meta":{"CorrelationId":"3f2504e0-4f89-41d3-9a0c-0305e82c3301"}}""")]
+	public async Task RequestSettingsMessageFilter_WithoutValidArgumentCorrelationId_GeneratesNewGuid_Test(string paramsJson)
+	{
+		var correlationId = await GetCorrelationIdForParamsAsync(paramsJson);
+
+		Assert.That(Guid.TryParse(correlationId, out _), Is.True);
+		Assert.That(correlationId, Is.Not.EqualTo("3f2504e0-4f89-41d3-9a0c-0305e82c3301"));
+	}
+
+	[Test]
+	public async Task RequestSettingsMessageFilter_WithSuppliedCorrelationId_TagsSuppliedValue_Test()
+	{
+		const string supplied = "3f2504e0-4f89-41d3-9a0c-0305e82c3301";
+		using var activity = new Activity("tools/call").Start();
+
+		await GetCorrelationIdForParamsAsync($$$"""{"_meta":{"correlationId":"{{{supplied}}}"}}""");
+
+		Assert.That(activity.GetTagItem(OtelAttributeNames.CorrelationIdTag), Is.EqualTo(supplied));
+	}
+
+	[Test]
+	public async Task RequestSettingsMessageFilter_OutgoingResponse_AddsCorrelationIdToMeta_Test()
+	{
+		accessor.Current = new RequestSettings();
+		var result = new JsonObject();
+		var response = new JsonRpcResponse { Id = new RequestId(1), Result = result };
+
+		await RequestSettingsMessageFilter.CreateOutgoing((_, _) => Task.CompletedTask)(CreateContext(response), CancellationToken.None);
+
+		Assert.That(result["_meta"]![RequestSettingsMessageFilter.CorrelationIdKey]!.GetValue<string>(), Is.EqualTo(accessor.Current.CorrelationId));
+	}
+
+	[Test]
+	public async Task RequestSettingsMessageFilter_OutgoingResponse_WithoutRequestSettings_LeavesResultUnchanged_Test()
+	{
+		var result = new JsonObject();
+		var response = new JsonRpcResponse { Id = new RequestId(1), Result = result };
+
+		await RequestSettingsMessageFilter.CreateOutgoing((_, _) => Task.CompletedTask)(CreateContext(response), CancellationToken.None);
+
+		Assert.That(result.ContainsKey("_meta"), Is.False);
 	}
 }

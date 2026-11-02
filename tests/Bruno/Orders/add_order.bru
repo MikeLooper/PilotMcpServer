@@ -1,0 +1,38 @@
+meta {
+  name: add_order
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 47,
+    "method": "tools/call",
+    "params": {
+      "name": "add_order",
+      "arguments": {
+        "order": {
+          "shipName": "Bruno Test",
+          "shipCity": "Portland",
+          "freight": 12.5
+        },
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the new ID", function () {
+    const id = res.getBody().tool.id;
+    expect(id).to.be.a("number").that.is.above(0);
+    bru.setVar("orderId", id);
+  });
+}

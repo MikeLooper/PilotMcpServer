@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using PilotMcpServer.Configuration;
 using PilotMcpServer.Models;
 using PilotMcpServer.Models.Dto;
@@ -82,9 +83,29 @@ public class PilotHttpClientTests
     }
 
     [Test]
-    public async Task PilotHttpClient_GetJsonAsync_NumericFieldsAsStrings_DeserializesPerOpenApiIntegerOrStringType_Test()
+    public async Task PilotHttpClient_GetJsonAsync_NoContentResponse_ReturnsNull_Test()
     {
-        var (client, _) = CreateClient(HttpStatusCode.OK, """{"orderId":"10248","productId":"11","unitPrice":"14.5","quantity":"12","discount":"0.15"}""");
+        var (client, _) = CreateClient(HttpStatusCode.NoContent, "");
+
+        var result = await client.GetJsonAsync<CategoryDto>("/categories/get/999", null, CancellationToken.None);
+
+        Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public async Task PilotHttpClient_GetJsonListAsync_NoContentResponse_ReturnsEmptyList_Test()
+    {
+        var (client, _) = CreateClient(HttpStatusCode.NoContent, "");
+
+        var result = await client.GetJsonListAsync<CategoryDto>("/categories/get-all", null, CancellationToken.None);
+
+        Assert.That(result, Is.Empty);
+    }
+
+    [Test]
+    public async Task PilotHttpClient_GetJsonAsync_NumericFields_DeserializesPerOpenApiNumericTypes_Test()
+    {
+        var (client, _) = CreateClient(HttpStatusCode.OK, """{"orderId":10248,"productId":11,"unitPrice":14.5,"quantity":12,"discount":0.15}""");
 
         var result = await client.GetJsonAsync<OrderDetailDto>("/v1/order-details/get/product/11/order/10248", null, CancellationToken.None);
 
@@ -94,6 +115,14 @@ public class PilotHttpClientTests
         Assert.That(result.UnitPrice, Is.EqualTo(14.5));
         Assert.That(result.Quantity, Is.EqualTo(12));
         Assert.That(result.Discount, Is.EqualTo(0.15f));
+    }
+
+    [Test]
+    public void PilotHttpClient_GetJsonAsync_NumericFieldsAsStrings_ThrowsJsonException_Test()
+    {
+        var (client, _) = CreateClient(HttpStatusCode.OK, """{"orderId":"10248","productId":"11","unitPrice":"14.5","quantity":"12","discount":"0.15"}""");
+
+        Assert.ThrowsAsync<JsonException>(() => client.GetJsonAsync<OrderDetailDto>("/v1/order-details/get/product/11/order/10248", null, CancellationToken.None));
     }
 
     [Test]
@@ -112,7 +141,7 @@ public class PilotHttpClientTests
     [Test]
     public async Task PilotHttpClient_PutJsonAsync_SendsPutWithBody_Test()
     {
-        var (client, handler) = CreateClient(HttpStatusCode.OK, "");
+        var (client, handler) = CreateClient(HttpStatusCode.NoContent, "");
         var category = new CategoryDto { CategoryId = 1, CategoryName = "Updated" };
 
         await client.PutJsonAsync("/categories/update", category, null, CancellationToken.None);

@@ -1,0 +1,29 @@
+meta {
+  name: get_about - uses selected API
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 13,
+    "method": "tools/call",
+    "params": {
+      "name": "get_about",
+      "arguments": {}
+    }
+  }
+}
+
+tests {
+  test("calls the selected deployment when apiName is omitted", function () {
+    expect(res.getBody().tool.name).to.equal(bru.getVar("alternateAboutName"));
+  });
+}

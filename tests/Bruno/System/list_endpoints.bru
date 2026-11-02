@@ -1,0 +1,31 @@
+meta {
+  name: list_endpoints
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 8,
+    "method": "tools/call",
+    "params": {
+      "name": "list_endpoints",
+      "arguments": {}
+    }
+  }
+}
+
+tests {
+  test("summarizes all 42 logical endpoints", function () {
+    const endpoints = res.getBody().tool;
+    expect(endpoints).to.have.lengthOf(42);
+    expect(endpoints.map((endpoint) => endpoint.pathTemplate)).to.include.members(["/healthcheck", "/about", "/v1/categories/get-all"]);
+  });
+}

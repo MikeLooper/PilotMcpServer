@@ -1,0 +1,49 @@
+meta {
+  name: add_customer
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 29,
+    "method": "tools/call",
+    "params": {
+      "name": "add_customer",
+      "arguments": {
+        "customer": {
+          "customerId": "{{customerId}}",
+          "companyName": "Bruno Test",
+          "city": "Portland",
+          "country": "USA"
+        },
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+script:pre-request {
+  // customerId is assigned by the caller, so use a new one on each run.
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let customerId = "";
+  for (let i = 0; i < 5; i++) {
+    customerId += letters[Math.floor(Math.random() * letters.length)];
+  }
+  bru.setVar("customerId", customerId);
+}
+
+tests {
+  test("returns the new ID", function () {
+    const id = res.getBody().tool.id;
+    expect(id).to.equal(bru.getVar("customerId"));
+    bru.setVar("customerId", id);
+  });
+}

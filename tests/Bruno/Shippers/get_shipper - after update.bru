@@ -1,0 +1,35 @@
+meta {
+  name: get_shipper - after update
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 68,
+    "method": "tools/call",
+    "params": {
+      "name": "get_shipper",
+      "arguments": {
+        "shipperId": {{shipperId}},
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the expected record", function () {
+    const record = res.getBody().tool;
+    expect(record.shipperId).to.equal(bru.getVar("shipperId"));
+    expect(record.companyName).to.equal("Bruno Updated");
+    expect(record.phone).to.equal("555-0199");
+  });
+}

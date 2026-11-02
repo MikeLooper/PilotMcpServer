@@ -1,0 +1,31 @@
+meta {
+  name: get_about - unknown apiName
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 7,
+    "method": "tools/call",
+    "params": {
+      "name": "get_about",
+      "arguments": {
+        "apiName": "No Such API"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns a tool error", function () {
+    expect(res.getBody().result.isError).to.equal(true);
+  });
+}

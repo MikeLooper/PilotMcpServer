@@ -1,0 +1,36 @@
+meta {
+  name: arrange - add_order
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 80,
+    "method": "tools/call",
+    "params": {
+      "name": "add_order",
+      "arguments": {
+        "order": {
+          "shipName": "Bruno Test"
+        },
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("creates the record", function () {
+    const id = res.getBody().tool.id;
+    expect(id).to.be.a("number").that.is.above(0);
+    bru.setVar("lineOrderId", id);
+  });
+}

@@ -1,0 +1,45 @@
+meta {
+  name: list_apis
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 9,
+    "method": "tools/call",
+    "params": {
+      "name": "list_apis",
+      "arguments": {}
+    }
+  }
+}
+
+tests {
+  test("lists all six deployments", function () {
+    expect(res.getBody().tool.map((api) => api.name)).to.have.members([
+      ".NET Core with SQL Server",
+      ".NET Core with PostgreSQL",
+      "Java Spring Boot with SQL Server",
+      "Java Spring Boot with PostgreSQL",
+      "Python with SQL Server",
+      "Python with PostgreSQL",
+    ]);
+  });
+
+  test("reports the deployment under test as available", function () {
+    const api = res.getBody().tool.find((candidate) => candidate.name === bru.interpolate("{{apiName}}"));
+    expect(api.isAvailable).to.equal(true);
+  });
+
+  test("flags one default deployment", function () {
+    expect(res.getBody().tool.filter((api) => api.isDefault)).to.have.lengthOf(1);
+  });
+}

@@ -1,0 +1,35 @@
+meta {
+  name: get_category - after update
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{mcpUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 23,
+    "method": "tools/call",
+    "params": {
+      "name": "get_category",
+      "arguments": {
+        "categoryId": {{categoryId}},
+        "apiName": "{{apiName}}"
+      }
+    }
+  }
+}
+
+tests {
+  test("returns the expected record", function () {
+    const record = res.getBody().tool;
+    expect(record.categoryId).to.equal(bru.getVar("categoryId"));
+    expect(record.categoryName).to.equal("Bruno Updated");
+    expect(record.description).to.equal("Updated by Bruno");
+  });
+}

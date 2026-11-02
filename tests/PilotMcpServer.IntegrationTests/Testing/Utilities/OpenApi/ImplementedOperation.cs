@@ -31,6 +31,9 @@ public sealed class ImplementedOperation
     /// <summary>Whether the client treats 404 Not Found as a normal "no record" result rather than an error.</summary>
     public bool HandlesNotFound { get; init; }
 
+    /// <summary>Whether the client treats a body-less 204 No Content as an empty result rather than reading a body.</summary>
+    public bool HandlesNoContent { get; init; }
+
     /// <summary>
     /// The schema the client deserializes 4xx/5xx bodies into (falling back to raw text when the body is not JSON),
     /// or <see langword="null"/> when the client only looks at the status code.
