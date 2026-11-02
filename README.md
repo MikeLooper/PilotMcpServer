@@ -176,17 +176,67 @@ If the collector isn't running, the server works normally and the telemetry is d
 
 - **Traces:** one span per MCP request from the ModelContextProtocol SDK (e.g. `tools/call get_category`), with a child span for each outgoing HTTP call: the Pilot API call and the Keycloak token request. The W3C `traceparent` header goes out with each Pilot API call. When the Pilot API is instrumented as well, as `PilotApiDotNet` is, its spans join the same trace.
 - **Metrics:** MCP operation and session durations (`mcp_server_operation_duration_seconds`, `mcp_server_session_duration_seconds`) and the .NET HttpClient metrics (`http_client_request_duration_seconds`, `http_client_active_requests`, etc.).
-- **Logs:** every `ILogger` entry, with the formatted message and scopes. This includes the SDK's "tool completed" and "tool threw an unhandled exception" entries and the HttpClient request/response entries.
+- **Logs:** every `ILogger` entry, with the formatted message and scopes. This includes the start and end entries described in [Request and Pilot API call logging](#request-and-pilot-api-call-logging), the SDK's "tool completed" and "tool threw an unhandled exception" entries, and the HttpClient request/response entries.
+
+### Pilot API request headers
+
+Every Pilot API request, including the System endpoints (`/about` and `/healthcheck`), carries the three optional headers that the OpenAPI specification defines on every endpoint:
+
+| Header | Value | Set by |
+| --- | --- | --- |
+| `X-Correlation-Id` | The current request's correlation ID (see [Correlation ID](#correlation-id)), or a new GUID outside of an MCP request | `CorrelationIdDelegatingHandler` |
+| `X-Api-Version` | The `apiVersion` from the embedded `appsettings.json` (currently `1`) | `PilotApiHeadersDelegatingHandler` |
+| `X-Caller-Name` | `PilotMcpServer`, so the Pilot API's logs show which application made the call | `PilotApiHeadersDelegatingHandler` |
+
+A value already on the request is kept (for `X-Correlation-Id`, only if it is a single valid GUID). The handlers run in this order on the `IPilotHttpClient`: correlation ID, API headers, security (bearer token, domain endpoints only), then logging.
+
+### Request settings
+
+Each incoming MCP request gets its own `RequestSettings`, set up by an incoming message filter (`RequestSettingsMessageFilter`) and available for the whole request through `IRequestSettingsAccessor`:
+
+| Setting | Value | Span tag | Log attribute |
+| --- | --- | --- | --- |
+| `CorrelationId` | The GUID the caller supplied, or a new GUID (see [Correlation ID](#correlation-id)) | `correlationId` | `CorrelationId` |
+| `RequestId` | The JSON-RPC `id` of the MCP request | `mcpRequestId` | `McpRequestId` |
+| `CallerName` | The MCP client's `clientInfo.name` from its `initialize` request (e.g. `Visual Studio Code`) | `callerName` | `CallerName` |
+
+The tags are added to the MCP request span and every span started during the request; the attributes are added to every log entry written during the request. `RequestId` and `CallerName` are left out when they aren't known. The request ID attribute is named `McpRequestId`, not `RequestId`, because ASP.NET Core's log scope already uses `RequestId` for its HTTP request identifier when the server runs over HTTP.
+
+`CallerName` names who called *this* server, so it isn't forwarded to the Pilot API: `X-Caller-Name` names this server instead. To follow one request across both services, use the correlation ID.
+
+### Request and Pilot API call logging
+
+The start and end of each MCP request and each Pilot API call is logged. This server has no database of its own: the Pilot API calls are its data access, and the Pilot API logs its own database calls. Every entry includes the correlation ID, request ID and caller name, both in the message text (so they show in the stderr console output) and as structured fields.
+
+| Event ID | Level | Logger category | Entry |
+| --- | --- | --- | --- |
+| 1000 | Information | `PilotMcpServer.Services.RequestSettingsMessageFilter` | `MCP request {McpOperation} started.` |
+| 1001 | Information | `PilotMcpServer.Services.RequestSettingsMessageFilter` | `MCP request {McpOperation} completed in {ElapsedMilliseconds} ms.` |
+| 1002 | Error | `PilotMcpServer.Services.RequestSettingsMessageFilter` | `MCP request {McpOperation} failed after {ElapsedMilliseconds} ms.` (with the exception) |
+| 2000 | Information | `PilotMcpServer.Services.PilotApiLoggingDelegatingHandler` | `Pilot API call {HttpMethod} {PilotApiPath} to {PilotApiName} started.` |
+| 2001 | Information | `PilotMcpServer.Services.PilotApiLoggingDelegatingHandler` | `Pilot API call ... completed with status {StatusCode} in {ElapsedMilliseconds} ms.` |
+| 2002 | Warning | `PilotMcpServer.Services.PilotApiLoggingDelegatingHandler` | `Pilot API call ... failed after {ElapsedMilliseconds} ms.` (no response, e.g. connection refused or timeout; with the exception) |
+
+`McpOperation` is the method, plus the tool name for a tool call (e.g. `tools/call get_category`), matching the SDK's span name. A tool that returns an error result still logs `completed`, because the SDK turns tool exceptions into error results before the filter sees them; the SDK's "tool threw an unhandled exception" entry records the failure. A Pilot API error status (e.g. 404 or 500) is logged as `completed` with that status code. A failed Pilot API call is a warning, not an error, because some tools expect it: `list_apis` reports an unreachable API as unavailable.
+
+The Pilot API call entries log the correlation ID actually sent in `X-Correlation-Id`. Example console output for one tool call:
+
+```text
+MCP request tools/call get_category started. CorrelationId: b49b9d1e-ba7a-407d-b18c-bd58d4a25342, McpRequestId: 2, CallerName: Visual Studio Code
+Pilot API call GET /v1/categories/get/1 to .NET Core with SQL Server started. CorrelationId: b49b9d1e-ba7a-407d-b18c-bd58d4a25342, McpRequestId: 2, CallerName: Visual Studio Code
+Pilot API call GET /v1/categories/get/1 to .NET Core with SQL Server completed with status 200 in 695.4 ms. CorrelationId: b49b9d1e-ba7a-407d-b18c-bd58d4a25342, McpRequestId: 2, CallerName: Visual Studio Code
+MCP request tools/call get_category completed in 1509.3 ms. CorrelationId: b49b9d1e-ba7a-407d-b18c-bd58d4a25342, McpRequestId: 2, CallerName: Visual Studio Code
+```
 
 ### Correlation ID
 
-Each incoming MCP request (each tool call) gets its own `RequestSettings` with a `CorrelationId` GUID: the value the caller supplied, or a new GUID if it didn't supply one. It is set up by an incoming message filter (`RequestSettingsMessageFilter`) and is available for the whole request through `IRequestSettingsAccessor`. The same value is:
+Each incoming MCP request (each tool call) gets its own `RequestSettings` with a `CorrelationId` GUID: the value the caller supplied, or a new GUID if it didn't supply one (see [Request settings](#request-settings)). The same value is:
 
-- sent to the Pilot API as the `X-Correlation-Id` header on every request the tool call makes. Before this change, each HTTP request got its own random GUID.
+- sent to the Pilot API as the `X-Correlation-Id` header on every request the tool call makes, including the System endpoints.
 - added to `Activity.Tags` as **`correlationId`** on the MCP request span and on every span started during the request.
 - added to `LogRecord.Attributes` as **`CorrelationId`** on every log entry written during the request.
 
-Because the Pilot API records the incoming `X-Correlation-Id` too, one ID finds a tool call's log entries in both the MCP server and the API. The header also goes to the System endpoints (`/about` and `/healthcheck`) during a tool call, though their contract doesn't define it.
+Because the Pilot API records the incoming `X-Correlation-Id` too, one ID finds a tool call's log entries in both the MCP server and the API.
 
 Each response returns the IDs in `result._meta`, as `correlationId` and `traceId`. To tie several tool calls into one workflow, pass the first call's `correlationId` to the later calls.
 
@@ -261,6 +311,12 @@ In Grafana, go to **Explore** (or **Drilldown → Logs / Traces / Metrics**) and
 | One tool call, across the MCP server and Pilot API | `{service_name=~".+"} \| CorrelationId="<guid>"` |
 | One tool call, MCP server only | `{service_name="PilotMcpServer"} \| CorrelationId="<guid>"` |
 | Entries for a tool | `{service_name="PilotMcpServer"} \| ToolName="get_category"` |
+| One MCP request by JSON-RPC ID | `{service_name="PilotMcpServer"} \| McpRequestId="<id>"` |
+| Requests from one MCP client | `{service_name="PilotMcpServer"} \| CallerName="Visual Studio Code"` |
+| MCP request start and end entries | `{service_name="PilotMcpServer"} \|= "MCP request"` |
+| Pilot API call start and end entries | `{service_name="PilotMcpServer"} \|= "Pilot API call"` |
+| Slow Pilot API calls | `{service_name="PilotMcpServer"} \|= "Pilot API call" \| ElapsedMilliseconds > 1000` |
+| Pilot API calls that got no response | `{service_name="PilotMcpServer"} \|= "Pilot API call" \|= "failed after"` |
 | Tool failures | `{service_name="PilotMcpServer"} \|= "threw an unhandled exception"` |
 | Entries with an exception | `{service_name="PilotMcpServer"} \| Exception_Message!=""` |
 | Exceptions by text | `{service_name="PilotMcpServer"} \| Exception_Message=~"(?i).*unknown pilot api.*"` |
@@ -274,6 +330,7 @@ Other useful fields on each entry: `TraceId` / `SpanId` (link to Tempo), `scope_
 | --- | --- |
 | All server traces | `{ resource.service.name = "PilotMcpServer" }` |
 | A tool call by correlation ID | `{ span.correlationId = "<guid>" }` |
+| Requests from one MCP client | `{ span.callerName = "Visual Studio Code" }` |
 | A specific tool | `{ name = "tools/call get_category" }` |
 | Failed tool calls | `{ resource.service.name = "PilotMcpServer" && status = error }` |
 | Slow tool calls | `{ resource.service.name = "PilotMcpServer" && name =~ "tools/call.*" && duration > 1s }` |
@@ -311,7 +368,7 @@ This server is a *client* of the Pilot API and doesn't publish its own OpenAPI d
 | Operations (method, path, tag, summary) | `PilotEndpointCatalog` |
 | Path and query parameters, request body, response type | The signature of the matching `[McpServerTool]` method (e.g. Categories `GetAll` → `CategoriesTools.GetAll*`) |
 | Request and response schemas | The DTO types, read by reflection with the client's own `PilotHttpClient` JSON serializer options |
-| Headers (`X-Correlation-Id`) and bearer authentication | A request for each path passed through the real correlation ID and security delegating handlers, in memory, into a recording stub |
+| Headers (`X-Correlation-Id`, `X-Api-Version`, `X-Caller-Name`) and bearer authentication | A request for each path passed through the real correlation ID, API header and security delegating handlers, in memory, into a recording stub |
 
 The derived contract is then compared with the spec, which is read with Microsoft.OpenApi. Comparisons are **consumer-compatible**, so whether a difference matters depends on which way the data flows:
 

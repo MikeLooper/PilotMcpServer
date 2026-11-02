@@ -30,4 +30,28 @@ public class EnrichActivityWithRequestSettingsProcessorTests
 
 		Assert.That(activity.GetTagItem(OtelAttributeNames.CorrelationIdTag), Is.Null);
 	}
+
+	[Test]
+	public void EnrichActivityWithRequestSettingsProcessor_WithRequestIdAndCallerName_TagsThem_Test()
+	{
+		var accessor = new RequestSettingsAccessor { Current = new RequestSettings { RequestId = "7", CallerName = "Visual Studio Code" } };
+		using var activity = new Activity("test");
+
+		new EnrichActivityWithRequestSettingsProcessor(accessor).OnStart(activity);
+
+		Assert.That(activity.GetTagItem(OtelAttributeNames.RequestIdTag), Is.EqualTo("7"));
+		Assert.That(activity.GetTagItem(OtelAttributeNames.CallerNameTag), Is.EqualTo("Visual Studio Code"));
+	}
+
+	[Test]
+	public void EnrichActivityWithRequestSettingsProcessor_WithoutRequestIdOrCallerName_OmitsThoseTags_Test()
+	{
+		var accessor = new RequestSettingsAccessor { Current = new RequestSettings() };
+		using var activity = new Activity("test");
+
+		new EnrichActivityWithRequestSettingsProcessor(accessor).OnStart(activity);
+
+		Assert.That(activity.GetTagItem(OtelAttributeNames.RequestIdTag), Is.Null);
+		Assert.That(activity.GetTagItem(OtelAttributeNames.CallerNameTag), Is.Null);
+	}
 }

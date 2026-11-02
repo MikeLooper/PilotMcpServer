@@ -19,7 +19,7 @@ namespace PilotMcpServer.IntegrationTests.Testing.Utilities.OpenApi;
 /// path parameters, query parameters, the request body and the response come from that method's signature, and
 /// schemas come from the DTO types read with the client's own <see cref="JsonSerializerOptions"/>.</item>
 /// <item>Headers and bearer authentication come from passing a request for each path through the client's
-/// correlation ID and security delegating handlers, in memory, into a recording handler.</item>
+/// correlation ID, API header and security delegating handlers, in memory, into a recording handler.</item>
 /// </list>
 /// </summary>
 public static partial class ImplementedContractBuilder
@@ -117,7 +117,8 @@ public static partial class ImplementedContractBuilder
                 Name = header.Key,
                 Location = ParameterLocation.Header,
                 AlwaysSent = true,
-                Schema = requestSchemas.Build(isGuid ? typeof(Guid) : typeof(string)),
+                // A header that is sent always has a value, so it is never null.
+                Schema = requestSchemas.Build(isGuid ? typeof(Guid) : typeof(string)) with { IsNullable = false },
             });
         }
 
@@ -196,7 +197,10 @@ public static partial class ImplementedContractBuilder
         var recorder = new RecordingHttpMessageHandler();
         var pipeline = new CorrelationIdDelegatingHandler
         {
-            InnerHandler = new SecurityDelegatingHandler(new StaticSecurityTokenProvider("probe-token")) { InnerHandler = recorder },
+            InnerHandler = new PilotApiHeadersDelegatingHandler
+            {
+                InnerHandler = new SecurityDelegatingHandler(new StaticSecurityTokenProvider("probe-token")) { InnerHandler = recorder },
+            },
         };
 
         using var invoker = new HttpMessageInvoker(pipeline);

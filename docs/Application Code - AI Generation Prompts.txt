@@ -87,3 +87,12 @@ Update OTEL to record the following:
 		- If exception stacktrace is not already recorded: Exception.Stacktrace = <record.Exception.StackTrace>
 		- If exception inner exception exists and is not already recorded: Exception.InnerException = <If record.Exception.InnerException != null: record.Exception.InnerException.ToString()>
 		- If the exception message, stacktrace, and inner exception are not added, due to redundancy or not being available, do not make any changes to the exception recording process.
+
+6.
+1. The OpenAPI specification (`shared\PilotSharedSource\OpenAPI\PilotApi_v1.yaml`) has changed:
+	- The `about` endpoint added headers: X-Api-Version, X-Correlation-Id
+	- The `healthcheck` endpoint added headers: X-Api-Version, X-Correlation-Id
+	- All endpoints added headers: X-Caller-Name
+2. Update the code, tests, and documentation to match the updated OpenAPI specification.
+3. Ensure that logging is occurring at Endpoint beginning and end, and for Database calls beginning and end.  
+	- Logging should include settings like correlation id, request id, caller name.

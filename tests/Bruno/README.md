@@ -48,7 +48,7 @@ Run the collection with `-r`, or use the Bruno runner, because later requests us
 | `System` | Healthcheck, about, endpoints, API selection, and unknown API names. It also checks that a valid or invalid `correlationId` doesn't fail a call |
 | Each data folder | Get all, a page, a page past the end, then add, get, update, get, delete, and get again |
 
-The tests can't see the `X-Correlation-Id` header the server sends to the Pilot API. Use Grafana to check that value.
+The tests can't see the `X-Correlation-Id`, `X-Api-Version` and `X-Caller-Name` headers the server sends to the Pilot API. Use Grafana, or the server's `Pilot API call` log entries, to check those values.
 
 ## Test data
 

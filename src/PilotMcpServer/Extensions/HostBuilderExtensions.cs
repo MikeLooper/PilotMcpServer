@@ -49,7 +49,8 @@ public static class HostBuilderExtensions
 
 	/// <summary>
 	/// Registers the Pilot domain services: the request settings accessor, the security token provider, the Pilot
-	/// HTTP client (with its correlation ID and security message handlers), and API selection state.
+	/// HTTP client (with its correlation ID, API header, security and logging message handlers, in that order), and
+	/// API selection state.
 	/// </summary>
 	public static IServiceCollection AddPilotDomainServices(this IServiceCollection services, IConfiguration configuration)
 	{
@@ -57,11 +58,15 @@ public static class HostBuilderExtensions
 		services.Configure<SecurityOptions>(configuration.GetSection(SecurityOptions.SectionName));
 		services.AddHttpClient<ISecurityTokenProvider, SecurityTokenProvider>();
 		services.AddTransient<CorrelationIdDelegatingHandler>();
+		services.AddTransient<PilotApiHeadersDelegatingHandler>();
 		services.AddTransient<SecurityDelegatingHandler>();
+		services.AddTransient<PilotApiLoggingDelegatingHandler>();
 		services
 			.AddHttpClient<IPilotHttpClient, PilotHttpClient>()
 			.AddHttpMessageHandler<CorrelationIdDelegatingHandler>()
-			.AddHttpMessageHandler<SecurityDelegatingHandler>();
+			.AddHttpMessageHandler<PilotApiHeadersDelegatingHandler>()
+			.AddHttpMessageHandler<SecurityDelegatingHandler>()
+			.AddHttpMessageHandler<PilotApiLoggingDelegatingHandler>();
 		services.AddSingleton<IPilotApiSelection, PilotApiSelectionState>();
 
 		return services;

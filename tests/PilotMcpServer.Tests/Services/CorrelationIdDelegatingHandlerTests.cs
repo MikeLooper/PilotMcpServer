@@ -140,14 +140,29 @@ public class CorrelationIdDelegatingHandlerTests
 	[TestCase("http://localhost:11001/about")]
 	[TestCase("http://localhost:11001/about?show-details=true")]
 	[TestCase("http://localhost:11001/healthcheck")]
-	public async Task CorrelationIdDelegatingHandler_SystemRequest_DoesNotAddHeader_Test(string uri)
+	public async Task CorrelationIdDelegatingHandler_SystemRequestOutsideToolCall_AddsNewGuid_Test(string uri)
 	{
 		var (invoker, inner) = CreateInvoker();
 		using var request = new HttpRequestMessage(HttpMethod.Get, uri);
 
 		await invoker.SendAsync(request, CancellationToken.None);
 
-		Assert.That(inner.LastRequest!.Headers.Contains(HeaderName), Is.False);
+		var value = GetSingleCorrelationId(inner.LastRequest!);
+		Assert.That(Guid.TryParse(value, out var parsed), Is.True);
+		Assert.That(parsed, Is.Not.EqualTo(Guid.Empty));
+	}
+
+	[Test]
+	public async Task CorrelationIdDelegatingHandler_SystemRequestWithValidGuid_PreservesValue_Test()
+	{
+		var (invoker, inner) = CreateInvoker();
+		const string existing = "7ea2c7f7-8b46-475d-86f8-7aaaa9e4a35b";
+		using var request = new HttpRequestMessage(HttpMethod.Get, "http://localhost:11001/about");
+		request.Headers.Add(HeaderName, existing);
+
+		await invoker.SendAsync(request, CancellationToken.None);
+
+		Assert.That(GetSingleCorrelationId(inner.LastRequest!), Is.EqualTo(existing));
 	}
 
 	[TestCase("http://localhost:11001/about")]

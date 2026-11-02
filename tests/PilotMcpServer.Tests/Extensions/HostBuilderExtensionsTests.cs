@@ -83,6 +83,45 @@ public class HostBuilderExtensionsTests
 	}
 
 	[Test]
+	public async Task HostBuilderExtensions_AddPilotDomainServices_PilotHttpClientSendsOpenApiHeadersOnSystemCalls_Test()
+	{
+		var services = new ServiceCollection();
+		var configuration = new ConfigurationBuilder().Build();
+		var primary = new FakeHttpMessageHandler(System.Net.HttpStatusCode.OK, "");
+
+		services.AddPilotDomainServices(configuration);
+		services.AddHttpClient<IPilotHttpClient, PilotHttpClient>().ConfigurePrimaryHttpMessageHandler(() => primary);
+		using var provider = services.BuildServiceProvider();
+
+		await provider.GetRequiredService<IPilotHttpClient>().GetHealthCheckAsync(null, CancellationToken.None);
+
+		var headers = primary.LastRequest!.Headers;
+		Assert.That(Guid.TryParse(headers.GetValues(CorrelationIdDelegatingHandler.HeaderName).Single(), out _), Is.True);
+		Assert.That(headers.GetValues(PilotApiHeadersDelegatingHandler.ApiVersionHeaderName).Single(), Is.EqualTo(PilotApiCatalog.Catalog.ApiVersion));
+		Assert.That(headers.GetValues(PilotApiHeadersDelegatingHandler.CallerNameHeaderName).Single(), Is.EqualTo(PilotApiHeadersDelegatingHandler.CallerName));
+	}
+
+	[Test]
+	public async Task HostBuilderExtensions_AddPilotDomainServices_PilotHttpClientLogsCallStartAndEnd_Test()
+	{
+		var services = new ServiceCollection();
+		var configuration = new ConfigurationBuilder().Build();
+		var primary = new FakeHttpMessageHandler(System.Net.HttpStatusCode.OK, "");
+		var loggerProvider = new CapturingLoggerProvider();
+
+		services.AddLogging(logging => logging.AddProvider(loggerProvider));
+		services.AddPilotDomainServices(configuration);
+		services.AddHttpClient<IPilotHttpClient, PilotHttpClient>().ConfigurePrimaryHttpMessageHandler(() => primary);
+		using var provider = services.BuildServiceProvider();
+
+		await provider.GetRequiredService<IPilotHttpClient>().GetHealthCheckAsync(null, CancellationToken.None);
+
+		var entries = loggerProvider.Entries.Where(entry => entry.Category == typeof(PilotApiLoggingDelegatingHandler).FullName).ToArray();
+		Assert.That(entries.Select(entry => entry.EventId.Id), Is.EqualTo(new[] { 2000, 2001 }));
+		Assert.That(entries[0].State["CorrelationId"], Is.EqualTo(primary.LastRequest!.Headers.GetValues(CorrelationIdDelegatingHandler.HeaderName).Single()));
+	}
+
+	[Test]
 	public void HostBuilderExtensions_AddPilotDomainServices_RegistersPilotApiSelectionAsSingleton_Test()
 	{
 		var services = new ServiceCollection();
