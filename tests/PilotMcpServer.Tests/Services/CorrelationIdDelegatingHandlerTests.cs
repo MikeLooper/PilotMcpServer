@@ -149,4 +149,19 @@ public class CorrelationIdDelegatingHandlerTests
 
 		Assert.That(inner.LastRequest!.Headers.Contains(HeaderName), Is.False);
 	}
+
+	[TestCase("http://localhost:11001/about")]
+	[TestCase("http://localhost:11001/healthcheck")]
+	public async Task CorrelationIdDelegatingHandler_SystemRequestDuringToolCall_SendsCurrentCorrelationId_Test(string uri)
+	{
+		var accessor = new RequestSettingsAccessor { Current = new RequestSettings() };
+		var inner = new FakeHttpMessageHandler(HttpStatusCode.OK, "{}");
+		using var invoker = new HttpMessageInvoker(new CorrelationIdDelegatingHandler(accessor) { InnerHandler = inner });
+		using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+
+		await invoker.SendAsync(request, CancellationToken.None);
+
+		Assert.That(GetSingleCorrelationId(inner.LastRequest!), Is.EqualTo(accessor.Current.CorrelationId));
+		accessor.Current = null;
+	}
 }

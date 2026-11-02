@@ -212,4 +212,27 @@ public class RequestSettingsMessageFilterTests
 
 		Assert.That(activity.GetTagItem(OtelAttributeNames.CorrelationIdTag), Is.EqualTo(supplied));
 	}
+
+	[Test]
+	public async Task RequestSettingsMessageFilter_OutgoingResponse_AddsCorrelationIdToMeta_Test()
+	{
+		accessor.Current = new RequestSettings();
+		var result = new JsonObject();
+		var response = new JsonRpcResponse { Id = new RequestId(1), Result = result };
+
+		await RequestSettingsMessageFilter.CreateOutgoing((_, _) => Task.CompletedTask)(CreateContext(response), CancellationToken.None);
+
+		Assert.That(result["_meta"]![RequestSettingsMessageFilter.CorrelationIdKey]!.GetValue<string>(), Is.EqualTo(accessor.Current.CorrelationId));
+	}
+
+	[Test]
+	public async Task RequestSettingsMessageFilter_OutgoingResponse_WithoutRequestSettings_LeavesResultUnchanged_Test()
+	{
+		var result = new JsonObject();
+		var response = new JsonRpcResponse { Id = new RequestId(1), Result = result };
+
+		await RequestSettingsMessageFilter.CreateOutgoing((_, _) => Task.CompletedTask)(CreateContext(response), CancellationToken.None);
+
+		Assert.That(result.ContainsKey("_meta"), Is.False);
+	}
 }

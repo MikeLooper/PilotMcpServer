@@ -186,7 +186,9 @@ Each incoming MCP request (each tool call) gets its own `RequestSettings` with a
 - added to `Activity.Tags` as **`correlationId`** on the MCP request span and on every span started during the request.
 - added to `LogRecord.Attributes` as **`CorrelationId`** on every log entry written during the request.
 
-Because the Pilot API records the incoming `X-Correlation-Id` too, one ID finds a tool call's log entries in both the MCP server and the API.
+Because the Pilot API records the incoming `X-Correlation-Id` too, one ID finds a tool call's log entries in both the MCP server and the API. The header also goes to the System endpoints (`/about` and `/healthcheck`) during a tool call, though their contract doesn't define it.
+
+Each response returns the IDs in `result._meta`, as `correlationId` and `traceId`. To tie several tool calls into one workflow, pass the first call's `correlationId` to the later calls.
 
 **Supplying your own correlation ID**
 

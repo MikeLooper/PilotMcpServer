@@ -16,11 +16,14 @@ namespace PilotMcpServer.Services;
 /// the SDK writes its "tool completed" / "tool threw" log entries outside the call-tool filter pipeline.
 /// The caller can supply the correlation ID as a GUID in <c>params._meta.correlationId</c> on any request, or in
 /// <c>params.arguments.correlationId</c> on a tool call. <c>_meta</c> wins if both hold a GUID; if neither does, a
-/// new one is generated. Notifications and responses pass through unchanged.
+/// new one is generated. Notifications pass through unchanged. <see cref="CreateOutgoing"/> returns the IDs on the
+/// response's <c>result._meta</c>, so a caller can look the request up, or reuse a generated ID for its next call.
 /// </summary>
 public static class RequestSettingsMessageFilter
 {
 	public const string CorrelationIdKey = "correlationId";
+
+	public const string TraceIdKey = "traceId";
 
 	public static McpMessageHandler Create(McpMessageHandler next)
 		=> async (context, cancellationToken) =>
@@ -46,6 +49,28 @@ public static class RequestSettingsMessageFilter
 			{
 				accessor.Current = previous;
 			}
+		};
+
+	public static McpMessageHandler CreateOutgoing(McpMessageHandler next)
+		=> (context, cancellationToken) =>
+		{
+			var requestSettings = context.Services?.GetService<IRequestSettingsAccessor>()?.Current;
+			if (requestSettings is not null && context.JsonRpcMessage is JsonRpcResponse { Result: JsonObject result })
+			{
+				if (result["_meta"] is not JsonObject meta)
+				{
+					meta = [];
+					result["_meta"] = meta;
+				}
+
+				meta[CorrelationIdKey] = requestSettings.CorrelationId;
+				if (Activity.Current is { } activity)
+				{
+					meta[TraceIdKey] = activity.TraceId.ToString();
+				}
+			}
+
+			return next(context, cancellationToken);
 		};
 
 	private static RequestSettings CreateRequestSettings(JsonRpcRequest request)

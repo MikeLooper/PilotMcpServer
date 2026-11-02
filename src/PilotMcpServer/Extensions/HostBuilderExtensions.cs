@@ -82,6 +82,10 @@ public static class HostBuilderExtensions
 			}
 		});
 
-		return builder.WithMessageFilters(filters => filters.AddIncomingFilter(RequestSettingsMessageFilter.Create));
+		return builder.WithMessageFilters(filters =>
+		{
+			filters.AddIncomingFilter(RequestSettingsMessageFilter.Create);
+			filters.AddOutgoingFilter(RequestSettingsMessageFilter.CreateOutgoing);
+		});
 	}
 }

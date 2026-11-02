@@ -51,12 +51,17 @@ public static class OpenTelemetryExtensions
 				serviceVersion: McpServerInfoFactory.ServerVersion,
 				autoGenerateServiceInstanceId: false))
 			.WithTracing(tracing => tracing				// Grafana Tempo
+				// Record every call, whatever sampling decision the caller's traceparent carries.
+				.SetSampler(new AlwaysOnSampler())
 				.AddSource(McpTelemetrySourceName)
+				// Without this, the HTTP transport's request activity is unrecorded and every span under it is dropped.
+				.AddAspNetCoreInstrumentation()
 				.AddHttpClientInstrumentation()
 				.AddProcessor(provider => new EnrichActivityWithRequestSettingsProcessor(provider.GetRequiredService<IRequestSettingsAccessor>()))
 				.AddOtlpExporter(exporter => ConfigureExporter(exporter, "v1/traces")))
 			.WithMetrics(metrics => metrics				// Grafana Mimir
 				.AddMeter(McpTelemetrySourceName)
+				.AddAspNetCoreInstrumentation()
 				.AddHttpClientInstrumentation()
 				.AddOtlpExporter(exporter => ConfigureExporter(exporter, "v1/metrics")))
 			.WithLogging(									// Grafana Loki
