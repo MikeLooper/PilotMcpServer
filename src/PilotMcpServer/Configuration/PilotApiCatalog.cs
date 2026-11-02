@@ -19,7 +19,8 @@ public static class PilotApiCatalog
 		.Select(api => new PilotApiEndpoint(
 			api.Name,
 			IsRunningInDocker ? api.ContainerName : api.Host,
-			api.Port))
+			api.Port,
+			api.ContainerName))
 		.ToArray();
 
 	/// <summary>The API used when no explicit selection has been made.</summary>

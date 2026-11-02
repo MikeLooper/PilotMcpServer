@@ -12,6 +12,9 @@ public static class OtelAttributeNames
 	/// <summary>Tag added to <c>Activity.Tags</c> (trace spans) holding the name of the MCP client that made the request.</summary>
 	public const string CallerNameTag = "callerName";
 
+	/// <summary>Tag added to <c>Activity.Tags</c> (trace spans) holding this server's instance ID (see <see cref="ServiceInstanceId"/>).</summary>
+	public const string ServiceInstanceIdTag = "service.instance.id";
+
 	/// <summary>Attribute added to <c>LogRecord.Attributes</c> holding the current correlation ID.</summary>
 	public const string CorrelationIdAttribute = "CorrelationId";
 
@@ -23,6 +26,9 @@ public static class OtelAttributeNames
 
 	/// <summary>Attribute added to <c>LogRecord.Attributes</c> holding the name of the MCP client that made the request.</summary>
 	public const string CallerNameAttribute = "CallerName";
+
+	/// <summary>Attribute added to <c>LogRecord.Attributes</c> holding this server's instance ID (see <see cref="ServiceInstanceId"/>).</summary>
+	public const string ServiceInstanceIdAttribute = "service_instance_id";
 
 	/// <summary>Log record attribute holding the logged exception's message.</summary>
 	public const string ExceptionMessage = "Exception.Message";

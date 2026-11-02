@@ -8,6 +8,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using PilotMcpServer.Configuration;
 using PilotMcpServer.Contracts.Services;
+using PilotMcpServer.OpenTelemetry;
 using PilotMcpServer.OpenTelemetry.Processors;
 using PilotMcpServer.Services;
 
@@ -33,6 +34,10 @@ public static class OpenTelemetryExtensions
 		}
 
 		services.TryAddSingleton<IRequestSettingsAccessor, RequestSettingsAccessor>();
+		services.TryAddSingleton<IPilotApiSelection, PilotApiSelectionState>();
+		// Built from the selected Pilot API, which can change at runtime, so it is added per span and log record
+		// rather than as the fixed service.instance.id resource attribute.
+		services.TryAddSingleton(provider => new ServiceInstanceIdProvider(options.ServiceName, provider.GetRequiredService<IPilotApiSelection>()));
 
 		var endpoint = options.GetEndpoint(DeploymentEnvironment.IsRunningInDocker());
 
@@ -58,6 +63,7 @@ public static class OpenTelemetryExtensions
 				.AddAspNetCoreInstrumentation()
 				.AddHttpClientInstrumentation()
 				.AddProcessor(provider => new EnrichActivityWithRequestSettingsProcessor(provider.GetRequiredService<IRequestSettingsAccessor>()))
+				.AddProcessor(provider => new EnrichActivityWithServiceInstanceIdProcessor(provider.GetRequiredService<ServiceInstanceIdProvider>()))
 				.AddOtlpExporter(exporter => ConfigureExporter(exporter, "v1/traces")))
 			.WithMetrics(metrics => metrics				// Grafana Mimir
 				.AddMeter(McpTelemetrySourceName)
@@ -68,6 +74,7 @@ public static class OpenTelemetryExtensions
 				logging => logging
 					// Enrichment processors must precede the exporter so they run before the record is batched.
 					.AddProcessor(provider => new EnrichLogsWithRequestSettingsProcessor(provider.GetRequiredService<IRequestSettingsAccessor>()))
+					.AddProcessor(provider => new EnrichLogsWithServiceInstanceIdProcessor(provider.GetRequiredService<ServiceInstanceIdProvider>()))
 					.AddProcessor(new LogExceptionAttributesProcessor())
 					.AddOtlpExporter(exporter => ConfigureExporter(exporter, "v1/logs")),
 				logging =>
