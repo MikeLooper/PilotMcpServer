@@ -96,3 +96,16 @@ Update OTEL to record the following:
 2. Update the code, tests, and documentation to match the updated OpenAPI specification.
 3. Ensure that logging is occurring at Endpoint beginning and end, and for Database calls beginning and end.  
 	- Logging should include settings like correlation id, request id, caller name.
+
+7.
+Update OTEL to include an Instance Id.
+The Instance Id will be a combination of the Service Name and the Target API Suffix (text after the second-to-last dash), in the format: `<service-name-with-hyphens>-<suffix>`.
+Examples:
+| Service Name | Target API | Suffix | Instance Id |
+| --- | --- | --- | --- |
+| PilotMcpServer | pilot-api-dotnet-mssql | dotnet-mssql | pilot-mcp-server-dotnet-mssql |
+| PilotMcpServer | pilot-api-python-postgres | python-postgres | pilot-mcp-server-python-postgres |
+| PilotMcpServer | pilot-api-java-postgres | java-postgres | pilot-mcp-server-java-postgres |
+
+For logs, include an Instance Id field named: `service_instance_id`.
+For traces, include an Instance Id field named: `service.instance.id`.

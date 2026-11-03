@@ -67,7 +67,7 @@ public static class HostBuilderExtensions
 			.AddHttpMessageHandler<PilotApiHeadersDelegatingHandler>()
 			.AddHttpMessageHandler<SecurityDelegatingHandler>()
 			.AddHttpMessageHandler<PilotApiLoggingDelegatingHandler>();
-		services.AddSingleton<IPilotApiSelection, PilotApiSelectionState>();
+		services.TryAddSingleton<IPilotApiSelection, PilotApiSelectionState>();
 
 		return services;
 	}

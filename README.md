@@ -284,6 +284,18 @@ A program or host can send it in `_meta` instead, which also covers requests tha
 
 The schema is added to every tool when the server starts (`CorrelationIdToolArgument`), so new tools get it without declaring a method parameter.
 
+### Service instance ID
+
+Every span and log entry carries an instance ID that tells which Pilot API this server was targeting: the service name (`OpenTelemetry:ServiceName`) in lowercase kebab case, a dash, then the text after the second-to-last dash of the selected Pilot API's container name.
+
+| Service name | Target API | Suffix | Instance ID |
+| --- | --- | --- | --- |
+| `PilotMcpServer` | `pilot-api-dotnet-mssql` | `dotnet-mssql` | `pilot-mcp-server-dotnet-mssql` |
+| `PilotMcpServer` | `pilot-api-python-postgres` | `python-postgres` | `pilot-mcp-server-python-postgres` |
+| `PilotMcpServer` | `pilot-api-java-postgres` | `java-postgres` | `pilot-mcp-server-java-postgres` |
+
+It is added to `Activity.Tags` as **`service.instance.id`** on every span (`EnrichActivityWithServiceInstanceIdProcessor`) and to `LogRecord.Attributes` as **`service_instance_id`** on every log entry (`EnrichLogsWithServiceInstanceIdProcessor`). It follows the currently selected API (`select_api`), so it is a span and log attribute, not the fixed `service.instance.id` resource attribute. A tool call that names a different API in its `apiName` argument still carries the selected API's instance ID.
+
 ### Exception attributes
 
 When a log entry carries an exception, `LogExceptionAttributesProcessor` adds the following attributes:
@@ -313,6 +325,7 @@ In Grafana, go to **Explore** (or **Drilldown → Logs / Traces / Metrics**) and
 | Entries for a tool | `{service_name="PilotMcpServer"} \| ToolName="get_category"` |
 | One MCP request by JSON-RPC ID | `{service_name="PilotMcpServer"} \| McpRequestId="<id>"` |
 | Requests from one MCP client | `{service_name="PilotMcpServer"} \| CallerName="Visual Studio Code"` |
+| Entries for one instance | `{service_name="PilotMcpServer"} \| service_instance_id="pilot-mcp-server-dotnet-mssql"` |
 | MCP request start and end entries | `{service_name="PilotMcpServer"} \|= "MCP request"` |
 | Pilot API call start and end entries | `{service_name="PilotMcpServer"} \|= "Pilot API call"` |
 | Slow Pilot API calls | `{service_name="PilotMcpServer"} \|= "Pilot API call" \| ElapsedMilliseconds > 1000` |
@@ -331,6 +344,7 @@ Other useful fields on each entry: `TraceId` / `SpanId` (link to Tempo), `scope_
 | All server traces | `{ resource.service.name = "PilotMcpServer" }` |
 | A tool call by correlation ID | `{ span.correlationId = "<guid>" }` |
 | Requests from one MCP client | `{ span.callerName = "Visual Studio Code" }` |
+| Spans for one instance | `{ span.service.instance.id = "pilot-mcp-server-dotnet-mssql" }` |
 | A specific tool | `{ name = "tools/call get_category" }` |
 | Failed tool calls | `{ resource.service.name = "PilotMcpServer" && status = error }` |
 | Slow tool calls | `{ resource.service.name = "PilotMcpServer" && name =~ "tools/call.*" && duration > 1s }` |
